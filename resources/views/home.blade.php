@@ -657,6 +657,26 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Alert Messages -->
+        @if(session('success'))
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 14px 16px; margin-bottom: 20px; border-radius: 8px;">
+                <p style="color: #065f46; font-size: 14px; margin: 0;">✅ {{ session('success') }}</p>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px 16px; margin-bottom: 20px; border-radius: 8px;">
+                <p style="color: #991b1b; font-size: 14px; margin: 0;">❌ {{ session('error') }}</p>
+            </div>
+        @endif
+
+        @if(Auth::check() && Auth::user()->role === 'validator' && !Auth::user()->verified)
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin-bottom: 20px; border-radius: 8px;">
+                <p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 600;">⏳ Akun Validator Menunggu Verifikasi</p>
+                <p style="color: #92400e; font-size: 13px; margin: 8px 0 0 0;">Akun Anda sedang dalam proses verifikasi oleh admin. Anda akan mendapat notifikasi setelah akun diverifikasi dan dapat mengakses dashboard validator.</p>
+            </div>
+        @endif
+
         <!-- Trending Products -->
         @if($trendingProducts->count() > 0)
         <div class="trending-section">

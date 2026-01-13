@@ -65,6 +65,25 @@ class CheckoutController extends Controller
                 DB::transaction(function () use ($request, $items, $sellerId, &$createdOrders) {
                     $totalAmount = 0;
 
+                    // Get seller's prodi to find validator
+                    $seller = \App\Models\User::find($sellerId);
+                    $validator = null;
+                    
+                    if ($seller && $seller->prodi) {
+                        // Find prodi ID from prodi name (with flexible matching)
+                        $prodi = \App\Models\StudyProgram::where('name', 'LIKE', '%' . $seller->prodi . '%')
+                            ->orWhere('code', 'LIKE', '%' . $seller->prodi . '%')
+                            ->first();
+                        
+                        if ($prodi) {
+                            // Find verified validator for seller's prodi
+                            $validator = \App\Models\User::where('role', 'validator')
+                                ->where('validator_prodi_id', $prodi->id)
+                                ->where('verified', true)
+                                ->first();
+                        }
+                    }
+
                     // Calculate total
                     foreach ($items as $item) {
                         $product = $item['product'];
@@ -111,6 +130,7 @@ class CheckoutController extends Controller
                         'total_amount' => $totalAmount + $shippingFee,
                         'status' => 'pending',
                         'buyer_id' => Auth::id(),
+                        'validator_id' => $validator?->id,
                         'shipping_address' => $shippingAddress,
                         'shipping_method' => $shippingMethod,
                         'shipping_fee' => $shippingFee,
@@ -155,8 +175,19 @@ class CheckoutController extends Controller
 
             // Redirect based on payment method
             if ($request->payment_method === 'transfer') {
+                // Get first order to show bank info
+                $firstOrder = Order::with('validator')->find($createdOrders[0]);
+                
+                $message = 'Pesanan berhasil dibuat! ';
+                if ($firstOrder && $firstOrder->validator) {
+                    $message .= 'Silakan transfer ke rekening ' . ($firstOrder->validator->bank_name ?? 'BCA') . 
+                               ' (' . ($firstOrder->validator->account_number ?? '-') . ') ' .
+                               'a.n. ' . ($firstOrder->validator->account_holder_name ?? $firstOrder->validator->name) . 
+                               ' sebesar Rp' . number_format($firstOrder->total_amount, 0, ',', '.');
+                }
+                
                 return redirect()->route('orders.show', $createdOrders[0])
-                    ->with('success', 'Pesanan berhasil dibuat. Silakan upload bukti pembayaran.');
+                    ->with('success', $message);
             } else {
                 return redirect()->route('orders.index')
                     ->with('success', 'Pesanan berhasil dibuat. Pembayaran COD saat barang diterima.');

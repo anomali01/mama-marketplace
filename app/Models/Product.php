@@ -33,6 +33,10 @@ class Product extends Model
         'category_id',
         'condition',
         'location',
+        'seller_proposed_validator_share',
+        'validator_proposed_validator_share',
+        'agreed_validator_share',
+        'revenue_share_status',
     ];
 
     /**

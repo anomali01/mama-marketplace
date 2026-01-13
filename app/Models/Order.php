@@ -21,6 +21,7 @@ class Order extends Model
         'total_amount',
         'status',
         'buyer_id',
+        'validator_id',
         'shipping_address',
         'shipping_method',
         'shipping_fee',
@@ -53,6 +54,14 @@ class Order extends Model
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+    /**
+     * Get the validator for this order.
+     */
+    public function validator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validator_id');
     }
 
     /**

@@ -77,20 +77,27 @@
 
         /* Alert Messages */
         .alert {
+            display: flex;
+            align-items: flex-start;
             padding: 12px 16px;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             font-size: 14px;
+            line-height: 1.6;
         }
 
         .alert-success {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+            font-weight: 500;
         }
 
         .alert-error {
             background: #ffebee;
             color: #c62828;
+            border-left: 4px solid #dc3545;
         }
 
         /* Status Timeline */
@@ -382,11 +389,24 @@
 
     <main class="main-content">
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success">
+                <svg style="width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+                <span style="flex: 1;">{{ session('success') }}</span>
+            </div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-error">{{ session('error') }}</div>
+            <div class="alert alert-error">
+                <svg style="width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <span style="flex: 1;">{{ session('error') }}</span>
+            </div>
         @endif
 
         <!-- Status Timeline -->
@@ -438,7 +458,13 @@
                 <div class="timeline-item {{ $order->status === 'shipped' ? 'active' : ($order->shipped_at ? 'completed' : '') }}">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-title">Pesanan Dikirim</div>
+                        <div class="timeline-title">
+                            @if($order->shipping_method === 'pickup')
+                                Siap Diambil
+                            @else
+                                Pesanan Dikirim
+                            @endif
+                        </div>
                         @if($order->shipped_at)
                             <div class="timeline-time">{{ $order->shipped_at->format('d M Y, H:i') }}</div>
                         @endif
@@ -478,7 +504,7 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Metode Pembayaran</span>
-                <span class="info-value">{{ $order->payment_method === 'cod' ? 'COD' : 'Transfer Bank' }}</span>
+                <span class="info-value">Transfer Bank</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Total</span>
@@ -517,6 +543,54 @@
             <div class="address-text">{{ $order->shipping_address }}</div>
         </div>
 
+        <!-- Rekening Validator (for Transfer Payment) -->
+        @if($order->payment_method === 'transfer')
+            @if($order->validator)
+                <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);">
+                    <h2 style="color: white; font-size: 20px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-university"></i>
+                        Informasi Transfer Pembayaran
+                    </h2>
+                    
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Nama Bank</div>
+                        <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">{{ $order->validator->bank_name ?? 'BCA' }}</div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Nomor Rekening</div>
+                        <div style="font-size: 26px; font-weight: 700; letter-spacing: 2px; font-family: 'Courier New', monospace;">
+                        {{ $order->validator->account_number ?? '-' }}
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Atas Nama</div>
+                    <div style="font-size: 19px; font-weight: 600;">{{ $order->validator->account_holder_name ?? $order->validator->name }}</div>
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Total yang Harus Ditransfer</div>
+                        <div style="font-size: 32px; font-weight: 700; color: #ffd700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                            Rp{{ number_format($order->total_amount, 0, ',', '.') }}
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 14px; background: rgba(255,255,255,0.15); border-radius: 8px; font-size: 13px; line-height: 1.7; border-left: 4px solid #ffd700;">
+                        <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                        <strong>PENTING:</strong> Transfer pembayaran dilakukan ke rekening validator prodi untuk verifikasi pembayaran yang lebih aman dan terpercaya. Setelah transfer, silakan upload bukti pembayaran di bawah.
+                    </div>
+                </div>
+            @else
+                <div class="section" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                    <h2 style="color: white; font-size: 18px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Validator Belum Tersedia
+                    </h2>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+                        Maaf, saat ini belum ada validator yang tersedia untuk prodi penjual. Silakan hubungi admin untuk informasi lebih lanjut.
+                    </p>
+                </div>
+            @endif
+        @endif
+
         <!-- Upload Payment Proof (Buyer - Transfer only) -->
         @if($order->buyer_id === auth()->id() && $order->payment_method === 'transfer' && !$order->payment_proof)
             <div class="section">
@@ -538,7 +612,9 @@
                 <h2 class="section-title">Bukti Pembayaran</h2>
                 <img src="{{ asset('storage/' . $order->payment_proof) }}" alt="Bukti Pembayaran" class="preview-image">
                 @if($order->payment_status === 'pending_confirmation')
-                    <p style="margin-top: 12px; font-size: 14px; color: #ef6c00;">Menunggu konfirmasi penjual...</p>
+                    <p style="margin-top: 12px; font-size: 14px; color: #ef6c00;">
+                        <i class="fas fa-clock"></i> Menunggu konfirmasi validator...
+                    </p>
                 @endif
             </div>
         @endif
@@ -555,13 +631,13 @@
                 <h2 class="section-title">Aksi Penjual</h2>
                 
                 @if($order->payment_status === 'pending_confirmation' && $order->payment_proof)
-                    <form action="{{ route('orders.confirm-payment', $order) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-success btn-block">Konfirmasi Pembayaran</button>
-                    </form>
+                    <div class="alert" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <i class="fas fa-info-circle" style="color: #856404; margin-right: 8px;"></i>
+                        <span style="color: #856404; font-size: 14px;">Menunggu validator mengonfirmasi pembayaran</span>
+                    </div>
                 @endif
 
-                @if($order->status === 'paid' || ($order->payment_method === 'cod' && $order->status === 'pending'))
+                @if($order->status === 'paid')
                     <form action="{{ route('orders.pack', $order) }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-primary btn-block">Kemas Pesanan</button>
@@ -571,7 +647,11 @@
                 @if($order->status === 'packed')
                     <form action="{{ route('orders.ship', $order) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-primary btn-block">Kirim Pesanan</button>
+                        @if($order->shipping_method === 'pickup')
+                            <button type="submit" class="btn btn-primary btn-block">Pesanan Siap Diambil</button>
+                        @else
+                            <button type="submit" class="btn btn-primary btn-block">Kirim Pesanan</button>
+                        @endif
                     </form>
                 @endif
             </div>

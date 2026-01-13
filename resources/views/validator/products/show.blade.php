@@ -429,6 +429,36 @@
                         </div>
                     </div>
 
+                    <!-- Bagi Hasil Info -->
+                    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="color: #0369a1; font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                            Informasi Bagi Hasil (Sistem)
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div style="background: white; padding: 12px; border-radius: 8px;">
+                                <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Validator Mendapat</div>
+                                <div style="color: #0369a1; font-size: 20px; font-weight: 700;">3%</div>
+                                <div style="color: #64748b; font-size: 11px; margin-top: 4px;">
+                                    = Rp{{ number_format($product->price * 0.03, 0, ',', '.') }}
+                                </div>
+                            </div>
+                            <div style="background: white; padding: 12px; border-radius: 8px;">
+                                <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Penjual Mendapat</div>
+                                <div style="color: #10b981; font-size: 20px; font-weight: 700;">97%</div>
+                                <div style="color: #64748b; font-size: 11px; margin-top: 4px;">
+                                    = Rp{{ number_format($product->price * 0.97, 0, ',', '.') }}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: #fef3c7; border: 1px solid #fde047; border-radius: 8px; padding: 10px; margin-top: 12px; font-size: 12px; color: #78716c;">
+                            💡 <strong>Catatan:</strong> Persentase bagi hasil ditentukan oleh sistem (3% untuk validator, 97% untuk penjual)
+                        </div>
+                    </div>
+
                     <div class="product-description">
                         <h4>Deskripsi</h4>
                         <p>{{ $product->description ?? 'Tidak ada deskripsi' }}</p>
@@ -449,7 +479,7 @@
 
                     @if($product->status === 'pending_verif')
                         <div class="action-buttons">
-                            <form action="{{ route('validator.products.approve', $product) }}" method="POST" style="flex: 1;">
+                            <form action="{{ route('validator.products.approve', $product) }}" method="POST" style="flex: 1;" id="approveForm">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="btn-approve" style="width: 100%;">
@@ -493,11 +523,15 @@
                     <label style="display: block; font-size: 14px; color: #475569; margin-bottom: 8px;">
                         Alasan Penolakan <span style="color: #ef4444;">*</span>
                     </label>
-                    <textarea name="rejection_reason" placeholder="Masukkan alasan mengapa produk ini ditolak..." required></textarea>
+                    <textarea name="rejection_reason" id="rejectionReason" placeholder="Masukkan alasan mengapa produk ini ditolak..." required></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="closeRejectModal()">Batal</button>
-                    <button type="submit" class="btn-submit-reject">Tolak Produk</button>
+                    <button type="submit" class="btn-submit-reject">Kirim</button>
+                </div>
+            </form>
+        </div>
+    </div>
                 </div>
             </form>
         </div>

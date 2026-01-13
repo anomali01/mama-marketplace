@@ -571,6 +571,17 @@
                     Daftar Penjual
                 </a>
             </li>
+
+            <li class="sidebar-menu-title">Penarikan Dana</li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('validator.withdrawals') }}" class="sidebar-menu-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Permintaan Penarikan
+                </a>
+            </li>
         </ul>
 
         <form action="{{ route('logout') }}" method="POST" class="logout-form">
@@ -658,6 +669,246 @@
                     <div class="stat-card-label">Total Penjual</div>
                 </div>
             </div>
+
+            <!-- Rekening Bank Info -->
+            <div class="section">
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fbbf24; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="background: white; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 700; color: #92400e; margin: 0;">Rekening Validator</h3>
+                            <p style="font-size: 13px; color: #b45309; margin: 4px 0 0 0;">Rekening untuk menerima pembayaran dari pembeli</p>
+                        </div>
+                    </div>
+                    <div style="background: white; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Nama Bank</div>
+                            <div style="color: #1e293b; font-size: 16px; font-weight: 600;">{{ $user->bank_name ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Nomor Rekening</div>
+                            <div style="color: #1e293b; font-size: 16px; font-weight: 600;">{{ $user->account_number ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Atas Nama</div>
+                            <div style="color: #1e293b; font-size: 16px; font-weight: 600;">{{ $user->account_holder_name ?? '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tracking Dana -->
+                <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Tracking Dana
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                        <div style="background: #fefce8; border: 2px solid #fde047; border-radius: 12px; padding: 16px;">
+                            <div style="color: #713f12; font-size: 13px; margin-bottom: 8px; font-weight: 500;">⭐ Saldo Validator</div>
+                            <div style="color: #b45309; font-size: 24px; font-weight: 700;">Rp{{ number_format($transactionStats['validator_balance'] ?? 0, 0, ',', '.') }}</div>
+                            <div style="color: #ca8a04; font-size: 11px; margin-top: 4px;">Fee 3% dari transaksi</div>
+                        </div>
+                        <div style="background: #fff7ed; border: 2px solid #fdba74; border-radius: 12px; padding: 16px;">
+                            <div style="color: #9a3412; font-size: 13px; margin-bottom: 8px; font-weight: 500;">⏳ Pending Transfer</div>
+                            <div style="color: #ea580c; font-size: 24px; font-weight: 700;">Rp{{ number_format($transactionStats['pending_withdrawals'] ?? 0, 0, ',', '.') }}</div>
+                            <div style="color: #f97316; font-size: 11px; margin-top: 4px;">Harus transfer ke penjual</div>
+                        </div>
+                        <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 16px;">
+                            <div style="color: #166534; font-size: 13px; margin-bottom: 8px; font-weight: 500;">✅ Sudah Transfer</div>
+                            <div style="color: #15803d; font-size: 24px; font-weight: 700;">Rp{{ number_format($transactionStats['total_transferred'] ?? 0, 0, ',', '.') }}</div>
+                            <div style="color: #16a34a; font-size: 11px; margin-top: 4px;">Total terkirim</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    @if(isset($recentTransactions) && $recentTransactions->count() > 0)
+                    <div style="border-top: 2px solid #f1f5f9; padding-top: 20px;">
+                        <h4 style="font-size: 15px; font-weight: 600; color: #475569; margin-bottom: 12px;">Transaksi Terbaru</h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #e2e8f0;">
+                                        <th style="text-align: left; padding: 8px; color: #64748b; font-weight: 600;">Tanggal</th>
+                                        <th style="text-align: left; padding: 8px; color: #64748b; font-weight: 600;">Tipe</th>
+                                        <th style="text-align: left; padding: 8px; color: #64748b; font-weight: 600;">Penjual</th>
+                                        <th style="text-align: right; padding: 8px; color: #64748b; font-weight: 600;">Jumlah</th>
+                                        <th style="text-align: center; padding: 8px; color: #64748b; font-weight: 600;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recentTransactions as $transaction)
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 10px; color: #475569;">{{ $transaction->created_at->format('d M Y, H:i') }}</td>
+                                        <td style="padding: 10px;">
+                                            @if($transaction->type === 'in')
+                                                <span style="background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">💰 Masuk</span>
+                                            @else
+                                                <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">📤 Keluar</span>
+                                            @endif
+                                        </td>
+                                        <td style="padding: 10px; color: #475569;">{{ $transaction->seller->name ?? '-' }}</td>
+                                        <td style="padding: 10px; text-align: right; font-weight: 600; color: {{ $transaction->type === 'in' ? '#16a34a' : '#dc2626' }};">
+                                            {{ $transaction->type === 'in' ? '+' : '-' }}Rp{{ number_format($transaction->amount, 0, ',', '.') }}
+                                        </td>
+                                        <td style="padding: 10px; text-align: center;">
+                                            @if($transaction->status === 'completed')
+                                                <span style="color: #16a34a; font-weight: 600;">✓</span>
+                                            @elseif($transaction->status === 'pending')
+                                                <span style="color: #f59e0b; font-weight: 600;">⏳</span>
+                                            @else
+                                                <span style="color: #dc2626; font-weight: 600;">✗</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @else
+                    <div style="text-align: center; padding: 32px; color: #94a3b8;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px;">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                        <p style="font-size: 14px; margin: 0;">Belum ada transaksi</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Saldo Penjual yang Harus Dibayar -->
+            @if(isset($sellerBalances) && $sellerBalances->count() > 0)
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Saldo Penjual (Prodi {{ $user->validatorProdi->name ?? '-' }})</h2>
+                    <a href="{{ route('validator.withdrawals') }}" class="section-link">Lihat Penarikan →</a>
+                </div>
+
+                <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; font-size: 14px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #e2e8f0;">
+                                    <th style="text-align: left; padding: 12px; color: #64748b; font-weight: 600;">Penjual</th>
+                                    <th style="text-align: right; padding: 12px; color: #64748b; font-weight: 600;">Total Saldo</th>
+                                    <th style="text-align: right; padding: 12px; color: #64748b; font-weight: 600;">Pending</th>
+                                    <th style="text-align: right; padding: 12px; color: #64748b; font-weight: 600;">Tersedia Ditarik</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($sellerBalances as $balance)
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">
+                                                {{ strtoupper(substr($balance->user->name ?? '?', 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: #1e293b;">{{ $balance->user->name ?? '-' }}</div>
+                                                <div style="font-size: 12px; color: #64748b;">{{ $balance->user->nim ?? '-' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; font-weight: 600; color: #1e293b;">
+                                        Rp{{ number_format($balance->amount, 0, ',', '.') }}
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; color: #f59e0b;">
+                                        Rp{{ number_format($balance->pending, 0, ',', '.') }}
+                                    </td>
+                                    <td style="padding: 12px; text-align: right;">
+                                        <span style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 8px; font-weight: 600;">
+                                            Rp{{ number_format($balance->available, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                <tr style="background: #f8fafc; font-weight: 700;">
+                                    <td style="padding: 12px; color: #1e293b;">TOTAL</td>
+                                    <td style="padding: 12px; text-align: right; color: #1e293b;">
+                                        Rp{{ number_format($sellerBalances->sum('amount'), 0, ',', '.') }}
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; color: #f59e0b;">
+                                        Rp{{ number_format($sellerBalances->sum('pending'), 0, ',', '.') }}
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; color: #16a34a;">
+                                        Rp{{ number_format($sellerBalances->sum('available'), 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 13px; color: #92400e;">
+                            <strong>💡 Info:</strong> Kolom "Pending" menunjukkan saldo yang sedang dalam proses penarikan. Silakan cek menu Penarikan untuk memproses permintaan transfer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Pending Sellers - Penjual Menunggu Verifikasi -->
+            @if(isset($pendingSellers) && $pendingSellers->count() > 0)
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Penjual Menunggu Verifikasi ({{ $pendingSellers->count() }})</h2>
+                </div>
+
+                <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; font-size: 14px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #e2e8f0;">
+                                    <th style="text-align: left; padding: 12px; color: #64748b; font-weight: 600;">Penjual</th>
+                                    <th style="text-align: left; padding: 12px; color: #64748b; font-weight: 600;">NIM</th>
+                                    <th style="text-align: left; padding: 12px; color: #64748b; font-weight: 600;">Program Studi</th>
+                                    <th style="text-align: left; padding: 12px; color: #64748b; font-weight: 600;">Telepon</th>
+                                    <th style="text-align: left; padding: 12px; color: #64748b; font-weight: 600;">Terdaftar</th>
+                                    <th style="text-align: center; padding: 12px; color: #64748b; font-weight: 600;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($pendingSellers as $seller)
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px;">
+                                                {{ strtoupper(substr($seller->name, 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: #1e293b;">{{ $seller->name }}</div>
+                                                <div style="font-size: 12px; color: #64748b;">{{ $seller->email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 12px; color: #475569; font-weight: 500;">{{ $seller->nim }}</td>
+                                    <td style="padding: 12px; color: #475569;">{{ $seller->prodi }}</td>
+                                    <td style="padding: 12px; color: #475569;">{{ $seller->phone }}</td>
+                                    <td style="padding: 12px; color: #64748b; font-size: 13px;">{{ $seller->created_at->diffForHumans() }}</td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <form action="{{ route('validator.sellers.verify', $seller->id) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                                                ✓ Verifikasi
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- Pending Products -->
             <div class="section">

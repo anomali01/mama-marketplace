@@ -6,6 +6,9 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\StudyProgram;
+use App\Models\Balance;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -54,6 +57,25 @@ class SellerController extends Controller
             'verified' => false, // Will be verified by validator
         ]);
         
+        // Kirim notifikasi ke validator prodi yang sesuai
+        $studyProgram = StudyProgram::where('name', 'LIKE', '%' . $request->prodi . '%')->first();
+        if ($studyProgram) {
+            $validator = User::where('role', 'validator')
+                ->where('validator_prodi_id', $studyProgram->id)
+                ->first();
+            
+            if ($validator) {
+                Notification::create([
+                    'user_id' => $validator->id,
+                    'type' => 'seller_registration',
+                    'title' => 'Pendaftaran Penjual Baru',
+                    'message' => $user->name . ' (' . $request->nim . ') mendaftar sebagai penjual dari prodi ' . $request->prodi . '. Silakan verifikasi akun penjual.',
+                    'related_id' => $user->id,
+                    'is_read' => false,
+                ]);
+            }
+        }
+        
         return redirect()->route('seller.dashboard')->with('success', 'Selamat! Akun kamu sudah terdaftar sebagai penjual. Silakan tunggu verifikasi.');
     }
     
@@ -93,7 +115,13 @@ class SellerController extends Controller
             ->selectRaw('SUM(price_at_order * quantity) as total')
             ->value('total') ?? 0;
         
-        return view('seller.dashboard', compact('user', 'products', 'productCounts', 'totalEarnings'));
+        // Get seller balance
+        $balance = Balance::firstOrCreate(
+            ['user_id' => $user->id, 'type' => 'seller'],
+            ['amount' => 0, 'pending' => 0]
+        );
+        
+        return view('seller.dashboard', compact('user', 'products', 'productCounts', 'totalEarnings', 'balance'));
     }
     
     /**

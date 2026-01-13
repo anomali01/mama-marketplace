@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -99,7 +98,7 @@ class OrderController extends Controller
             }
         }
 
-        $order->load(['items.product.seller', 'buyer']);
+        $order->load(['items.product.seller', 'buyer', 'validator']);
         return view('orders.show', compact('order'));
     }
 
@@ -249,16 +248,26 @@ class OrderController extends Controller
             'shipped_at' => now(),
         ]);
 
-        // Notify buyer
-        \App\Models\Notification::createOrderNotification(
-            $order->buyer_id,
-            'Pesanan Dikirim 🚚',
-            'Pesanan ' . $order->order_code . ' sedang dalam perjalanan ke alamat Anda.',
-            $order->id,
-            'shipped'
-        );
-
-        return back()->with('success', 'Pesanan sedang dikirim.');
+        // Notify buyer based on shipping method
+        if ($order->shipping_method === 'pickup') {
+            \App\Models\Notification::createOrderNotification(
+                $order->buyer_id,
+                'Pesanan Siap Diambil 📦',
+                'Pesanan ' . $order->order_code . ' sudah siap diambil. Silakan ambil pesanan Anda di lokasi penjual.',
+                $order->id,
+                'shipped'
+            );
+            return back()->with('success', 'Pesanan siap diambil oleh pembeli.');
+        } else {
+            \App\Models\Notification::createOrderNotification(
+                $order->buyer_id,
+                'Pesanan Dikirim 🚚',
+                'Pesanan ' . $order->order_code . ' sedang dalam perjalanan ke alamat Anda.',
+                $order->id,
+                'shipped'
+            );
+            return back()->with('success', 'Pesanan sedang dikirim.');
+        }
     }
 
 

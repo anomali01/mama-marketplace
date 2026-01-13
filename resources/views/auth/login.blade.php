@@ -348,7 +348,8 @@
             </form>
 
             <p class="register-link">
-                Belum punya akun? <a href="{{ route('register') }}">Sign up disini</a>
+                Belum punya akun? <a href="{{ route('register') }}">Sign up disini</a><br>
+                <a href="{{ route('register.validator') }}" style="color: #fbbf24; margin-top: 8px; display: inline-block; font-weight: 600;">Daftar sebagai Validator</a>
             </p>
         </div>
     </div>

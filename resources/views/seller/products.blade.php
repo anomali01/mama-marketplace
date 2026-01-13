@@ -446,6 +446,13 @@
                         @endif
                         <span class="product-stock">Stok: {{ $product->stock }}</span>
                     </div>
+                    
+                    @if($product->status === 'rejected' && $product->rejection_reason)
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px;">
+                            <div style="color: #991b1b; font-weight: 600; margin-bottom: 4px;">Alasan Penolakan:</div>
+                            <div style="color: #dc2626;">{{ $product->rejection_reason }}</div>
+                        </div>
+                    @endif
                 </div>
                 
                 <div class="product-actions">

@@ -560,8 +560,15 @@
         <!-- Earnings Section -->
         <div class="earnings-section">
             <p class="earnings-label">Saldo Penghasilan Anda</p>
-            <h1 class="earnings-amount">Rp{{ number_format($totalEarnings ?? 0, 0, ',', '.') }}</h1>
-            <p class="earnings-info">Siap untuk ditarik</p>
+            <h1 class="earnings-amount">Rp{{ number_format($balance->amount ?? 0, 0, ',', '.') }}</h1>
+            <p class="earnings-info">
+                @if(isset($balance) && $balance->pending > 0)
+                    <span style="color: #f59e0b;">Rp{{ number_format($balance->available, 0, ',', '.') }} tersedia untuk ditarik</span>
+                    <span style="color: #94a3b8; font-size: 12px;">(Rp{{ number_format($balance->pending, 0, ',', '.') }} pending)</span>
+                @else
+                    Siap untuk ditarik
+                @endif
+            </p>
             
             @if($user->verified)
                 <span class="verification-badge badge-verified">
@@ -582,8 +589,8 @@
             @endif
             
             <div class="earnings-buttons">
-                <a href="#" class="btn-withdraw">Tarik Dana</a>
-                <a href="#" class="btn-history">Lihat Riwayat</a>
+                <a href="{{ route('seller.withdrawals') }}" class="btn-withdraw">Tarik Dana</a>
+                <a href="{{ route('seller.withdrawals') }}" class="btn-history">Lihat Riwayat</a>
             </div>
         </div>
     </header>

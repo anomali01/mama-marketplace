@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            // Tambah kolom prodi_id untuk validator (beda dengan prodi untuk mahasiswa)
+            $table->unsignedBigInteger('validator_prodi_id')->nullable()->after('role');
+            $table->foreign('validator_prodi_id')->references('id')->on('prodis')->onDelete('set null');
         });
     }
 
@@ -22,7 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropForeign(['validator_prodi_id']);
+            $table->dropColumn('validator_prodi_id');
         });
     }
 };

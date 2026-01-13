@@ -542,7 +542,7 @@
                         <div class="shipping-option-header">
                             <div class="shipping-radio"></div>
                             <div class="shipping-info">
-                                <div class="shipping-name">🏪 Ambil Sendiri (COD di Tempat)</div>
+                                <div class="shipping-name">🏪 Ambil Sendiri</div>
                                 <div class="shipping-desc">Ambil barang langsung di lokasi penjual - Gratis</div>
                             </div>
                             <div class="shipping-icon">
@@ -645,29 +645,29 @@
                     Metode Pembayaran
                 </h2>
                 <div class="payment-options">
-                    <div class="payment-option" data-method="cod">
-                        <div class="payment-radio"></div>
-                        <div class="payment-info">
-                            <div class="payment-name">Cash on Delivery (COD)</div>
-                            <div class="payment-desc">Bayar saat barang diterima</div>
-                        </div>
-                        <div class="payment-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="payment-option" data-method="transfer">
+                    <div class="payment-option active" data-method="transfer">
                         <div class="payment-radio"></div>
                         <div class="payment-info">
                             <div class="payment-name">Transfer Bank</div>
-                            <div class="payment-desc">Transfer ke rekening penjual & upload bukti</div>
+                            <div class="payment-desc">Transfer ke rekening validator & upload bukti pembayaran</div>
                         </div>
                         <div class="payment-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                                 <line x1="1" y1="10" x2="23" y2="10"></line>
                             </svg>
+                        </div>
+                    </div>
+                    <div style="background: #fffbeb; border: 2px solid #fbbf24; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                        <div style="color: #92400e; font-size: 13px; display: flex; align-items: start; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <div>
+                                <strong>Catatan Penting:</strong> Pembayaran dilakukan melalui transfer ke rekening validator untuk memastikan keamanan transaksi. Validator akan meneruskan pembayaran ke penjual setelah barang diterima.
+                            </div>
                         </div>
                     </div>
                 </div>

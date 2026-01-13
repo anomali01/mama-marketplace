@@ -76,6 +76,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/seller/products', [SellerController::class, 'products'])->name('seller.products');
     Route::get('/seller/edit-shop', [SellerController::class, 'editShop'])->name('seller.edit-shop');
     Route::patch('/seller/edit-shop', [SellerController::class, 'updateShop'])->name('seller.update-shop');
+
+    // Withdrawal Routes (Seller)
+    Route::get('/seller/withdrawals', [App\Http\Controllers\WithdrawalController::class, 'index'])->name('seller.withdrawals');
+    Route::post('/seller/withdrawals', [App\Http\Controllers\WithdrawalController::class, 'store'])->name('seller.withdrawals.store');
+    Route::post('/seller/withdrawals/{withdrawal}/confirm', [App\Http\Controllers\WithdrawalController::class, 'confirm'])->name('seller.withdrawals.confirm');
 });
 
 // Validator Routes
@@ -93,6 +98,26 @@ Route::middleware(['auth', 'validator'])->prefix('validator')->name('validator.'
     // Sellers
     Route::get('/sellers', [ValidatorController::class, 'sellers'])->name('sellers.index');
     Route::get('/sellers/{seller}', [ValidatorController::class, 'showSeller'])->name('sellers.show');
+    Route::post('/sellers/{seller}/verify', [ValidatorController::class, 'verifySeller'])->name('sellers.verify');
+
+    // Orders - Payment Confirmation
+    Route::get('/orders', [ValidatorController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}', [ValidatorController::class, 'showOrder'])->name('orders.show');
+    Route::post('/orders/{order}/confirm-payment', [ValidatorController::class, 'confirmPayment'])->name('orders.confirm-payment');
+
+    // Withdrawal Requests (Validator)
+    Route::get('/withdrawals', [App\Http\Controllers\WithdrawalController::class, 'validatorIndex'])->name('withdrawals');
+    Route::get('/withdrawals/{withdrawal}', [App\Http\Controllers\WithdrawalController::class, 'show'])->name('withdrawals.show');
+    Route::post('/withdrawals/{withdrawal}/process', [App\Http\Controllers\WithdrawalController::class, 'process'])->name('withdrawals.process');
+    Route::post('/withdrawals/{withdrawal}/upload-proof', [App\Http\Controllers\WithdrawalController::class, 'uploadProof'])->name('withdrawals.upload-proof');
+});
+
+// Admin Routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/validators', [App\Http\Controllers\AdminController::class, 'validators'])->name('validators');
+    Route::post('/validators/{validator}/approve', [App\Http\Controllers\AdminController::class, 'approveValidator'])->name('validators.approve');
+    Route::delete('/validators/{validator}/reject', [App\Http\Controllers\AdminController::class, 'rejectValidator'])->name('validators.reject');
 });
 
 // Route Testing (Pintu Belakang)

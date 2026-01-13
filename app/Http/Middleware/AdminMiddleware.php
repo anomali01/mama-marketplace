@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidatorMiddleware
+class AdminMiddleware
 {
     /**
      * Handle an incoming request.
@@ -20,14 +20,8 @@ class ValidatorMiddleware
             return redirect()->route('login');
         }
 
-        if (Auth::user()->role !== 'validator') {
-            abort(403, 'Akses ditolak. Anda bukan validator.');
-        }
-
-        // Cek apakah validator sudah verified
-        if (!Auth::user()->verified) {
-            return redirect()->route('home')
-                ->with('error', 'Akun validator Anda masih menunggu verifikasi dari admin.');
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Anda bukan admin.');
         }
 
         return $next($request);

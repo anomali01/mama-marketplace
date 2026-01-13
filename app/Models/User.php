@@ -30,6 +30,13 @@ class User extends Authenticatable
         'shop_description',
         'shop_address',
         'shop_image',
+        'bank_name',
+        'account_number',
+        'account_holder_name',
+        'seller_bank_name',
+        'seller_account_number',
+        'seller_account_holder_name',
+        'validator_prodi_id',
     ];
 
     /**
@@ -62,6 +69,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the study program that the validator manages.
+     */
+    public function validatorStudyProgram()
+    {
+        return $this->belongsTo(StudyProgram::class, 'validator_prodi_id');
+    }
+
+    /**
+     * Alias for validatorStudyProgram
+     */
+    public function validatorProdi()
+    {
+        return $this->belongsTo(StudyProgram::class, 'validator_prodi_id');
+    }
+
+    /**
      * Get the products for the user.
      */
     public function products()
@@ -75,5 +98,21 @@ class User extends Authenticatable
     public function validatedStudyProgram()
     {
         return $this->hasOne(StudyProgram::class, 'validator_id');
+    }
+
+    /**
+     * Get withdrawal requests for this seller
+     */
+    public function withdrawalRequests()
+    {
+        return $this->hasMany(WithdrawalRequest::class, 'seller_id');
+    }
+
+    /**
+     * Get withdrawal requests handled by this validator
+     */
+    public function handledWithdrawals()
+    {
+        return $this->hasMany(WithdrawalRequest::class, 'validator_id');
     }
 }

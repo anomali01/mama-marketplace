@@ -42,6 +42,10 @@ class ProductController extends Controller
             $data['images'] = [$path];
         }
 
+        // Set fixed revenue share: 3% untuk validator, 97% untuk penjual
+        $data['seller_proposed_validator_share'] = 3;
+        $data['revenue_share_status'] = 'pending';
+
         Product::create($data);
 
         return redirect()->route('seller.dashboard')->with('success', 'Produk berhasil ditambahkan dan menunggu verifikasi.');
@@ -69,16 +73,24 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
+            'stock' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $product->update($request->all());
+        // Handle image upload if new image provided
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $data['images'] = [$path];
+        }
 
-        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
+        $product->update($data);
+
+        return redirect()->route('seller.products')->with('success', 'Produk berhasil diperbarui.');
     }
 
     /**

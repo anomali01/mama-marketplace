@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Produk - MAMA Marketplace</title>
+    <title>Edit Produk - MAMA Marketplace</title>
     <link rel="icon" type="image/png" href="{{ asset('img/logo-mama.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -266,7 +266,7 @@
 <body>
     <header class="header">
         <a href="{{ route('seller.dashboard') }}" class="back-btn">←</a>
-        <h1>Tambah Produk</h1>
+        <h1>Edit Produk</h1>
     </header>
     
     <div class="container">
@@ -280,25 +280,30 @@
             </div>
         @endif
         
-        <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="form-card">
+        <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data" class="form-card">
             @csrf
+            @method('PUT')
             
             <div class="image-upload" id="imageUpload">
                 <div class="upload-icon">📷</div>
                 <div class="upload-text">Tap untuk upload foto produk</div>
                 <div class="upload-hint">Format: JPG, PNG (Maks. 2MB)</div>
                 <input type="file" name="image" id="imageInput" accept="image/*">
-                <img class="image-preview" id="imagePreview" alt="Preview">
+                @if($product->image)
+                    <img class="image-preview" id="imagePreview" src="{{ asset('storage/' . $product->image) }}" alt="Preview" style="display: block;">
+                @else
+                    <img class="image-preview" id="imagePreview" alt="Preview">
+                @endif
             </div>
             
             <div class="form-group">
                 <label>Nama Produk <span>*</span></label>
-                <input type="text" name="name" class="form-control" placeholder="Contoh: Laptop Asus ROG" value="{{ old('name') }}" required>
+                <input type="text" name="name" class="form-control" placeholder="Contoh: Laptop Asus ROG" value="{{ old('name', $product->name) }}" required>
             </div>
             
             <div class="form-group">
                 <label>Deskripsi <span>*</span></label>
-                <textarea name="description" class="form-control" placeholder="Jelaskan kondisi, kelengkapan, dan detail produk..." required>{{ old('description') }}</textarea>
+                <textarea name="description" class="form-control" placeholder="Jelaskan kondisi, kelengkapan, dan detail produk..." required>{{ old('description', $product->description) }}</textarea>
             </div>
             
             <div class="form-group">
@@ -306,7 +311,7 @@
                 <select name="category_id" class="form-control" required>
                     <option value="">Pilih Kategori</option>
                     @foreach(\App\Models\Category::all() as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                        <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
                             {{ $category->name }}
                         </option>
                     @endforeach
@@ -318,13 +323,13 @@
                     <label>Harga <span>*</span></label>
                     <div class="price-input">
                         <span class="prefix">Rp</span>
-                        <input type="number" name="price" class="form-control" placeholder="0" value="{{ old('price') }}" required min="1000">
+                        <input type="number" name="price" class="form-control" placeholder="0" value="{{ old('price', $product->price) }}" required min="1000">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Stok <span>*</span></label>
-                    <input type="number" name="stock" class="form-control" placeholder="1" value="{{ old('stock', 1) }}" required min="1">
+                    <input type="number" name="stock" class="form-control" placeholder="1" value="{{ old('stock', $product->stock) }}" required min="1">
                 </div>
             </div>
             
@@ -332,11 +337,11 @@
                 <label>Kondisi Produk <span>*</span></label>
                 <div class="condition-options">
                     <div class="condition-option">
-                        <input type="radio" name="condition" id="condNew" value="new" {{ old('condition', 'new') == 'new' ? 'checked' : '' }}>
+                        <input type="radio" name="condition" id="condNew" value="new" {{ old('condition', $product->condition) == 'new' ? 'checked' : '' }}>
                         <label for="condNew">✨ Baru</label>
                     </div>
                     <div class="condition-option">
-                        <input type="radio" name="condition" id="condUsed" value="used" {{ old('condition') == 'used' ? 'checked' : '' }}>
+                        <input type="radio" name="condition" id="condUsed" value="used" {{ old('condition', $product->condition) == 'used' ? 'checked' : '' }}>
                         <label for="condUsed">📦 Bekas</label>
                     </div>
                 </div>
@@ -344,7 +349,7 @@
             
             <div class="form-group">
                 <label>📍 Lokasi Pengambilan Barang <span style="color: #e74c3c;">*</span></label>
-                <input type="text" name="location" class="form-control" placeholder="Contoh: Gedung FTI Lt.2 Ruang 201, Kampus A" value="{{ old('location') }}" required>
+                <input type="text" name="location" class="form-control" placeholder="Contoh: Gedung FTI Lt.2 Ruang 201, Kampus A" value="{{ old('location', $product->location) }}" required>
                 <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
                     Lokasi dimana pembeli bisa mengambil barang (wajib diisi). Tulis selengkap mungkin agar pembeli mudah menemukan.
                 </small>
@@ -384,7 +389,7 @@
             </div>
             
             <button type="submit" class="submit-btn">
-                Tambahkan Produk
+                Simpan Perubahan
             </button>
         </form>
     </div>

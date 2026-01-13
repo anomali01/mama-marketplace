@@ -30,7 +30,23 @@
         <div class="content">
             <div class="section">
                 <div class="section-header">
-                    <h2 class="section-title">Semua Penjual ({{ $sellers->total() }} orang)</h2>
+                    <h2 class="section-title">Daftar Penjual</h2>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0;">
+                    <a href="{{ route('validator.sellers.index', ['status' => 'all']) }}" 
+                       style="padding: 12px 20px; text-decoration: none; color: {{ ($status ?? 'all') === 'all' ? '#ff6a00' : '#64748b' }}; font-weight: 600; border-bottom: 3px solid {{ ($status ?? 'all') === 'all' ? '#ff6a00' : 'transparent' }}; margin-bottom: -2px;">
+                        Semua ({{ $allCount }})
+                    </a>
+                    <a href="{{ route('validator.sellers.index', ['status' => 'verified']) }}" 
+                       style="padding: 12px 20px; text-decoration: none; color: {{ ($status ?? 'all') === 'verified' ? '#10b981' : '#64748b' }}; font-weight: 600; border-bottom: 3px solid {{ ($status ?? 'all') === 'verified' ? '#10b981' : 'transparent' }}; margin-bottom: -2px;">
+                        Terverifikasi ({{ $verifiedCount }})
+                    </a>
+                    <a href="{{ route('validator.sellers.index', ['status' => 'unverified']) }}" 
+                       style="padding: 12px 20px; text-decoration: none; color: {{ ($status ?? 'all') === 'unverified' ? '#f59e0b' : '#64748b' }}; font-weight: 600; border-bottom: 3px solid {{ ($status ?? 'all') === 'unverified' ? '#f59e0b' : 'transparent' }}; margin-bottom: -2px;">
+                        Belum Verifikasi ({{ $unverifiedCount }})
+                    </a>
                 </div>
 
                 @if($sellers->count() > 0)
@@ -43,7 +59,16 @@
                                     </div>
                                     <div class="seller-card-info">
                                         <h3 class="seller-card-name">{{ $seller->name }}</h3>
-                                        <p class="seller-card-prodi">{{ $seller->studyProgram->name ?? 'Mahasiswa' }}</p>
+                                        <p class="seller-card-prodi">{{ $seller->prodi ?? 'Mahasiswa' }}</p>
+                                        @if(!$seller->verified)
+                                            <span style="display: inline-block; margin-top: 4px; padding: 4px 8px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; border-radius: 6px;">
+                                                ⏳ Belum Terverifikasi
+                                            </span>
+                                        @else
+                                            <span style="display: inline-block; margin-top: 4px; padding: 4px 8px; background: #d1fae5; color: #065f46; font-size: 11px; font-weight: 600; border-radius: 6px;">
+                                                ✓ Terverifikasi
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="seller-card-stats">
@@ -70,16 +95,25 @@
                                         </svg>
                                         Bergabung {{ $seller->created_at->format('d M Y') }}
                                     </span>
-                                    <a href="{{ route('validator.sellers.show', $seller) }}" class="seller-card-link">
-                                        Lihat Detail →
-                                    </a>
+                                    @if(!$seller->verified)
+                                        <form action="{{ route('validator.sellers.verify', $seller) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                                                ✓ Verifikasi
+                                            </button>
+                                        </form>
+                                    @else
+                                        <a href="{{ route('validator.sellers.show', $seller) }}" class="seller-card-link">
+                                            Lihat Detail →
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
                     </div>
 
                     <div class="pagination-wrapper">
-                        {{ $sellers->links() }}
+                        {{ $sellers->appends(['status' => $status ?? 'all'])->links() }}
                     </div>
                 @else
                     <div class="empty-state">

@@ -1,6 +1,11 @@
 @php
     use App\Models\Product;
+    use App\Models\Order;
     $pendingCount = Product::where('status', 'pending_verif')->count();
+    $pendingPaymentsCount = Order::where('validator_id', auth()->id())
+        ->where('payment_status', 'pending_confirmation')
+        ->whereNotNull('payment_proof')
+        ->count();
 @endphp
 
 <aside class="sidebar">
@@ -80,6 +85,39 @@
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
                     Daftar Penjual
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-title">Pembayaran</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="{{ route('validator.orders') }}" class="sidebar-nav-link {{ $active === 'orders' ? 'active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Konfirmasi Pembayaran
+                    @if($pendingPaymentsCount > 0)
+                        <span class="sidebar-nav-badge">{{ $pendingPaymentsCount }}</span>
+                    @endif
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-title">Penarikan Dana</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="{{ route('validator.withdrawals') }}" class="sidebar-nav-link {{ $active === 'withdrawals' ? 'active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Permintaan Penarikan
                 </a>
             </li>
         </ul>
