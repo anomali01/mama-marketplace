@@ -105,12 +105,13 @@ class SellerController extends Controller
             })->sum('quantity'),
         ];
         
-        // Calculate total earnings from completed orders
+        // Calculate total earnings from completed/delivered orders
         $totalEarnings = OrderItem::whereHas('product', function($q) use ($user) {
                 $q->where('seller_id', $user->id);
             })
             ->whereHas('order', function($q) {
-                $q->where('status', 'completed');
+                // ✅ FIX: Query both 'delivered' and 'completed' status
+                $q->whereIn('status', ['delivered', 'completed']);
             })
             ->selectRaw('SUM(price_at_order * quantity) as total')
             ->value('total') ?? 0;

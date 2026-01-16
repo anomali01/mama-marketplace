@@ -10,11 +10,15 @@ class TransactionLog extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'order_id',
+        'withdrawal_id',
         'validator_id',
         'seller_id',
         'type',
         'amount',
+        'balance_before',
+        'balance_after',
         'validator_fee',
         'seller_amount',
         'status',

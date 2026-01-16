@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\BalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -145,24 +146,44 @@ class OrderController extends Controller
         if ($request->hasFile('delivery_proof')) {
             $path = $request->file('delivery_proof')->store('delivery_proofs', 'public');
             
-            $order->update([
-                'delivery_proof' => $path,
-                'status' => 'delivered',
-                'delivered_at' => now(),
-            ]);
+            DB::transaction(function () use ($order, $path) {
+                $order->update([
+                    'delivery_proof' => $path,
+                    'status' => 'delivered',
+                    'delivered_at' => now(),
+                ]);
 
-            // Notify seller that order is completed
-            foreach ($order->items as $item) {
-                \App\Models\Notification::createOrderNotification(
-                    $item->product->seller_id,
-                    'Pesanan Selesai ✅',
-                    'Pesanan ' . $order->order_code . ' telah diterima oleh pembeli.',
-                    $order->id,
-                    'completed'
-                );
-            }
+                // ✅ FIX: Add balance to seller with revenue sharing
+                $balanceService = new BalanceService();
+                
+                foreach ($order->items as $item) {
+                    $product = $item->product;
+                    $grossAmount = $item->price_at_order * $item->quantity;
+                    
+                    // Get agreed validator share percentage (default 0)
+                    $validatorSharePct = $product->agreed_validator_share ?? 0;
+                    
+                    // Add income with revenue sharing
+                    $balanceService->addOrderIncome(
+                        sellerId: $product->seller_id,
+                        orderId: $order->id,
+                        grossAmount: $grossAmount,
+                        validatorSharePercentage: $validatorSharePct,
+                        validatorId: $order->validator_id
+                    );
+                    
+                    // Notify seller
+                    \App\Models\Notification::createOrderNotification(
+                        $product->seller_id,
+                        'Pesanan Selesai ✅',
+                        'Pesanan ' . $order->order_code . ' telah diterima. Saldo Anda telah ditambahkan!',
+                        $order->id,
+                        'completed'
+                    );
+                }
+            });
 
-            return back()->with('success', 'Bukti penerimaan berhasil diupload. Pesanan selesai.');
+            return back()->with('success', 'Bukti penerimaan berhasil diupload. Pesanan selesai dan saldo penjual telah diperbarui.');
         }
 
         return back()->with('error', 'Gagal mengupload bukti penerimaan.');
@@ -182,11 +203,26 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $order->update([
-            'payment_status' => 'confirmed',
-            'status' => 'paid',
-            'confirmed_at' => now(),
-        ]);
+        // ✅ FIX: Kurangi stock saat payment confirmed, bukan saat checkout
+        DB::transaction(function () use ($order) {
+            foreach ($order->items as $item) {
+                $product = $item->product;
+                
+                // Check stock availability
+                if ($product->stock < $item->quantity) {
+                    throw new \Exception("Stok {$product->name} tidak mencukupi. Stok tersedia: {$product->stock}");
+                }
+                
+                // Deduct stock
+                $product->decrement('stock', $item->quantity);
+            }
+            
+            $order->update([
+                'payment_status' => 'confirmed',
+                'status' => 'paid',
+                'confirmed_at' => now(),
+            ]);
+        });
 
         // Notify buyer
         \App\Models\Notification::createOrderNotification(
@@ -197,7 +233,7 @@ class OrderController extends Controller
             'paid'
         );
 
-        return back()->with('success', 'Pembayaran telah dikonfirmasi.');
+        return back()->with('success', 'Pembayaran telah dikonfirmasi dan stok telah dikurangi.');
     }
 
     /**
@@ -248,6 +284,11 @@ class OrderController extends Controller
             'shipped_at' => now(),
         ]);
 
+        // ✅ FIX: Auto-confirm COD payment saat shipped
+        if ($order->payment_method === 'cod' && $order->payment_status !== 'confirmed') {
+            $order->update(['payment_status' => 'confirmed']);
+        }
+
         // Notify buyer based on shipping method
         if ($order->shipping_method === 'pickup') {
             \App\Models\Notification::createOrderNotification(
@@ -268,6 +309,27 @@ class OrderController extends Controller
             );
             return back()->with('success', 'Pesanan sedang dikirim.');
         }
+    }
+
+    /**
+     * Complete order (mark as completed after delivered)
+     */
+    public function completeOrder(Order $order)
+    {
+        // Buyer can complete their own order
+        if ($order->buyer_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        if ($order->status !== 'delivered') {
+            return back()->with('error', 'Pesanan harus berstatus delivered untuk diselesaikan.');
+        }
+
+        $order->update([
+            'status' => 'completed',
+        ]);
+
+        return back()->with('success', 'Pesanan telah diselesaikan. Terima kasih!');
     }
 
 

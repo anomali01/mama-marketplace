@@ -9,6 +9,7 @@ use App\Models\Balance;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\StudyProgram;
+use App\Services\BalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -189,26 +190,48 @@ class WithdrawalController extends Controller
         if ($request->hasFile('transfer_proof')) {
             $path = $request->file('transfer_proof')->store('transfer-proofs', 'public');
             
-            $withdrawal->update([
-                'transfer_proof' => $path,
-                'status' => 'transferred',
-                'transferred_at' => now(),
-            ]);
+            DB::beginTransaction();
+            try {
+                // ✅ FIX: Deduct balance using BalanceService saat upload proof
+                $balanceService = new BalanceService();
+                $balanceService->processWithdrawal(
+                    sellerId: $withdrawal->seller_id,
+                    withdrawalId: $withdrawal->id,
+                    amount: $withdrawal->amount
+                );
+                
+                $withdrawal->update([
+                    'transfer_proof' => $path,
+                    'status' => 'completed', // Langsung completed karena sudah transfer
+                    'transferred_at' => now(),
+                    'completed_at' => now(),
+                ]);
+                
+                // Also decrement pending
+                $balance = Balance::where('user_id', $withdrawal->seller_id)
+                    ->where('type', 'seller')
+                    ->first();
+                if ($balance) {
+                    $balance->decrement('pending', $withdrawal->amount);
+                }
 
-            // Create transaction log
-            TransactionLog::create([
-                'order_id' => Order::where('seller_id', $withdrawal->seller_id)->first()->id ?? null,
-                'validator_id' => Auth::id(),
-                'seller_id' => $withdrawal->seller_id,
-                'type' => 'out',
-                'amount' => $withdrawal->amount,
-                'validator_fee' => $withdrawal->validator_fee,
-                'seller_amount' => $withdrawal->amount,
-                'status' => 'pending',
-                'description' => 'Penarikan dana ke penjual - Withdrawal #' . $withdrawal->id,
-            ]);
-
-            return back()->with('success', 'Bukti transfer berhasil diupload! Menunggu konfirmasi dari penjual.');
+                // Notify seller
+                Notification::create([
+                    'user_id' => $withdrawal->seller_id,
+                    'type' => 'withdrawal_completed',
+                    'title' => 'Penarikan Dana Berhasil',
+                    'message' => 'Dana sebesar Rp' . number_format($withdrawal->amount, 0, ',', '.') . ' telah ditransfer ke rekening Anda.',
+                    'related_id' => $withdrawal->id,
+                    'is_read' => false,
+                ]);
+                
+                DB::commit();
+                return back()->with('success', 'Bukti transfer berhasil diupload dan saldo sudah dikurangi!');
+                
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', 'Gagal upload: ' . $e->getMessage());
+            }
         }
 
         return back()->with('error', 'Gagal upload bukti transfer.');
@@ -217,51 +240,24 @@ class WithdrawalController extends Controller
     /**
      * Seller - Confirm withdrawal received
      */
+    /**
+     * Seller - Confirm withdrawal received (DEPRECATED - now auto-completed)
+     * Balance sudah dikurangi saat validator upload proof
+     */
     public function confirm(WithdrawalRequest $withdrawal)
     {
         if ($withdrawal->seller_id !== Auth::id()) {
             abort(403);
         }
 
-        DB::beginTransaction();
-        try {
-            // Get seller balance
-            $balance = Balance::where('user_id', $withdrawal->seller_id)
-                ->where('type', 'seller')
-                ->first();
-
-            if ($balance) {
-                // Decrement both amount and pending
-                $balance->decrement('amount', $withdrawal->amount);
-                $balance->decrement('pending', $withdrawal->amount);
-            }
-
+        // Just mark as completed if not already
+        if ($withdrawal->status !== 'completed') {
             $withdrawal->update([
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
-
-            // Update transaction log
-            $transactionLog = TransactionLog::where('seller_id', $withdrawal->seller_id)
-                ->where('validator_id', $withdrawal->validator_id)
-                ->where('amount', $withdrawal->amount)
-                ->where('type', 'out')
-                ->where('status', 'pending')
-                ->latest()
-                ->first();
-
-            if ($transactionLog) {
-                $transactionLog->update([
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                ]);
-            }
-
-            DB::commit();
-            return back()->with('success', 'Penarikan dana dikonfirmasi! Dana telah diterima.');
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Terjadi kesalahan saat konfirmasi penarikan.');
         }
+
+        return back()->with('success', 'Penarikan dana telah dikonfirmasi.');
     }
 }

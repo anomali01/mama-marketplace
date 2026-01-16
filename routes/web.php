@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
     Route::post('/orders/{order}/pack', [OrderController::class, 'packOrder'])->name('orders.pack');
     Route::post('/orders/{order}/ship', [OrderController::class, 'shipOrder'])->name('orders.ship');
+    Route::post('/orders/{order}/complete', [OrderController::class, 'completeOrder'])->name('orders.complete');
     
     // Cart (placeholder)
     Route::get('/cart', function () {

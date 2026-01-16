@@ -139,7 +139,7 @@ class CheckoutController extends Controller
                         'notes' => $request->notes,
                     ]);
 
-                    // Create order items and update stock
+                    // Create order items (stock will be deducted on payment confirmation)
                     foreach ($items as $item) {
                         $product = $item['product'];
                         $order->items()->create([
@@ -148,7 +148,8 @@ class CheckoutController extends Controller
                             'price_at_order' => $product->price,
                         ]);
 
-                        $product->decrement('stock', $item['quantity']);
+                        // ✅ REMOVED: Stock decrement moved to confirmPayment()
+                        // Stock will be checked and deducted only after payment is confirmed
                         
                         // Create notification for seller
                         \App\Models\Notification::createOrderNotification(
