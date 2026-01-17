@@ -65,24 +65,29 @@ class CheckoutController extends Controller
                 DB::transaction(function () use ($request, $items, $sellerId, &$createdOrders) {
                     $totalAmount = 0;
 
-                    // Get seller's prodi to find validator
+                    // Auto-assign validator based on seller's prodi
                     $seller = \App\Models\User::find($sellerId);
                     $validator = null;
                     
                     if ($seller && $seller->prodi) {
-                        // Find prodi ID from prodi name (with flexible matching)
-                        $prodi = \App\Models\StudyProgram::where('name', 'LIKE', '%' . $seller->prodi . '%')
-                            ->orWhere('code', 'LIKE', '%' . $seller->prodi . '%')
+                        // Find prodi ID from prodi name
+                        // Prodi is stored as full name like "Teknik Informatika"
+                        $prodi = \App\Models\StudyProgram::where('name', $seller->prodi)
+                            ->orWhere('name', 'LIKE', '%' . $seller->prodi . '%')
                             ->first();
                         
                         if ($prodi) {
-                            // Find verified validator for seller's prodi
+                            // Find the ONLY verified validator for seller's prodi
+                            // System ensures only 1 validator per prodi
                             $validator = \App\Models\User::where('role', 'validator')
                                 ->where('validator_prodi_id', $prodi->id)
                                 ->where('verified', true)
                                 ->first();
                         }
                     }
+                    
+                    // If validator found, payment will be transferred to validator
+                    // If no validator, order can still proceed but without validator confirmation
 
                     // Calculate total
                     foreach ($items as $item) {

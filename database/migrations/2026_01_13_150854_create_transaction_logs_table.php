@@ -13,17 +13,25 @@ return new class extends Migration
     {
         Schema::create('transaction_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->foreignId('validator_id')->constrained('users')->cascadeOnDelete()->comment('Validator yang mengelola transaksi');
-            $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete()->comment('Penjual yang menerima uang');
-            $table->enum('type', ['in', 'out'])->comment('in = uang masuk dari pembeli, out = uang keluar ke penjual');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->comment('User yang terkait dengan transaksi');
+            $table->foreignId('order_id')->nullable()->constrained('orders')->cascadeOnDelete();
+            $table->unsignedBigInteger('withdrawal_id')->nullable();
+            $table->enum('type', [
+                'order_income',           // Pendapatan dari order
+                'validator_commission',   // Komisi validator
+                'withdrawal',             // Penarikan saldo
+                'refund',                 // Pengembalian dana
+                'adjustment'              // Penyesuaian manual
+            ])->comment('Tipe transaksi');
             $table->decimal('amount', 12, 2)->comment('Jumlah uang');
-            $table->decimal('validator_fee', 12, 2)->default(0)->comment('Fee validator (3%)');
-            $table->decimal('seller_amount', 12, 2)->default(0)->comment('Jumlah untuk penjual (97%)');
-            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
+            $table->decimal('balance_before', 12, 2)->default(0)->comment('Saldo sebelum transaksi');
+            $table->decimal('balance_after', 12, 2)->default(0)->comment('Saldo setelah transaksi');
+            $table->enum('status', ['pending', 'completed', 'cancelled', 'failed'])->default('pending');
             $table->text('description')->nullable();
-            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
+            
+            // Note: Foreign key untuk withdrawal_id akan ditambahkan di migration 
+            // 2026_01_15_235917 setelah tabel withdrawal_requests dibuat
         });
     }
 

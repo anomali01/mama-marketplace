@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         // Add foreign keys for MySQL/MariaDB
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreign('prodi_id')->references('id')->on('prodis')->nullOnDelete();
-        });
-
+        // Note: users.prodi_id foreign key is already defined in create_users_table migration
+        
         Schema::table('prodis', function (Blueprint $table) {
             $table->foreign('validator_id')->references('id')->on('users')->onDelete('set null');
         });
@@ -26,10 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['prodi_id']);
-        });
-
+        // Note: users.prodi_id foreign key is dropped in create_users_table migration
+        
         Schema::table('prodis', function (Blueprint $table) {
             $table->dropForeign(['validator_id']);
         });

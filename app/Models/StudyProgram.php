@@ -23,6 +23,15 @@ class StudyProgram extends Model
     }
 
     /**
+     * Get all validators assigned to this study program.
+     */
+    public function validators()
+    {
+        return $this->hasMany(User::class, 'validator_prodi_id')
+                    ->where('role', 'validator');
+    }
+
+    /**
      * Get all products that belong to this study program.
      */
     public function products()

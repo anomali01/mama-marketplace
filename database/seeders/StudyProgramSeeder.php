@@ -13,11 +13,11 @@ class StudyProgramSeeder extends Seeder
     public function run(): void
     {
         $programs = [
-            ['name' => 'Teknik Informatika', 'code' => 'TI'],
+            ['name' => 'Informatika', 'code' => 'TI'],
             ['name' => 'Sistem Informasi', 'code' => 'SI'],
-            ['name' => 'Teknik Elektro', 'code' => 'TE'],
-            ['name' => 'Teknik Mesin', 'code' => 'TM'],
-            ['name' => 'Teknik Sipil', 'code' => 'TS'],
+            ['name' => 'Elektro', 'code' => 'TE'],
+            ['name' => 'Mesin', 'code' => 'TM'],
+            ['name' => 'Sipil', 'code' => 'TS'],
             ['name' => 'Akuntansi', 'code' => 'AK'],
             ['name' => 'Manajemen', 'code' => 'MN'],
             ['name' => 'Ilmu Komunikasi', 'code' => 'IK'],

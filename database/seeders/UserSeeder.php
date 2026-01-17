@@ -26,7 +26,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'admin',
                 'nim' => '00000000',
-                'prodi' => $prodis->first()->id ?? 1,
+                'prodi' => $prodis->first()->name ?? 'Informatika',
                 'phone' => '081234567890',
                 'verified' => true,
             ]
@@ -41,7 +41,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '12345678',
-                'prodi' => $prodis->where('code', 'TI')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'TI')->first()->name ?? 'Informatika',
                 'phone' => '081234567891',
                 'verified' => true,
             ]
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '20210001',
-                'prodi' => $prodis->where('code', 'TI')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'TI')->first()->name ?? 'Informatika',
                 'phone' => '081111111111',
                 'verified' => true,
             ]
@@ -71,7 +71,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '20210002',
-                'prodi' => $prodis->where('code', 'SI')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'SI')->first()->name ?? 'Sistem Informasi',
                 'phone' => '082222222222',
                 'verified' => true,
             ]
@@ -86,7 +86,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '20210003',
-                'prodi' => $prodis->where('code', 'DKV')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'DKV')->first()->name ?? 'Desain Komunikasi Visual',
                 'phone' => '083333333333',
                 'verified' => true,
             ]
@@ -101,7 +101,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '20210004',
-                'prodi' => $prodis->where('code', 'MN')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'MN')->first()->name ?? 'Manajemen',
                 'phone' => '084444444444',
                 'verified' => true,
             ]
@@ -116,7 +116,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '20220001',
-                'prodi' => $prodis->where('code', 'AK')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'AK')->first()->name ?? 'Akuntansi',
                 'phone' => '085555555555',
                 'verified' => true,
             ]
@@ -131,7 +131,7 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'mahasiswa',
                 'nim' => '20220002',
-                'prodi' => $prodis->where('code', 'TE')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'TE')->first()->name ?? 'Elektro',
                 'phone' => '086666666666',
                 'verified' => true,
             ]
@@ -142,7 +142,7 @@ class UserSeeder extends Seeder
         // Email: @student.ac.id, Password: 12345678
         // ==========================================
 
-        // Validator 1
+        // Validator 1 - untuk Teknik Informatika
         User::updateOrCreate(
             ['email' => 'validator@student.ac.id'],
             [
@@ -151,13 +151,14 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345678'),
                 'role' => 'validator',
                 'nim' => '19000001',
-                'prodi' => $prodis->where('code', 'TI')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'TI')->first()->name ?? 'Informatika',
                 'phone' => '087777777777',
                 'verified' => true,
+                'validator_prodi_id' => $prodis->where('code', 'TI')->first()->id ?? 1,
             ]
         );
 
-        // Validator 2
+        // Validator 2 - untuk Sistem Informasi
         User::updateOrCreate(
             ['email' => 'validator2@student.ac.id'],
             [
@@ -166,13 +167,14 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345678'),
                 'role' => 'validator',
                 'nim' => '19000002',
-                'prodi' => $prodis->where('code', 'SI')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'SI')->first()->name ?? 'Sistem Informasi',
                 'phone' => '088888888888',
                 'verified' => true,
+                'validator_prodi_id' => $prodis->where('code', 'SI')->first()->id ?? 2,
             ]
         );
 
-        // Validator 3
+        // Validator 3 - untuk Teknik Elektro
         User::updateOrCreate(
             ['email' => 'ahmad.validator@student.ac.id'],
             [
@@ -181,9 +183,10 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345678'),
                 'role' => 'validator',
                 'nim' => '19000003',
-                'prodi' => $prodis->where('code', 'TE')->first()->id ?? 1,
+                'prodi' => $prodis->where('code', 'TE')->first()->name ?? 'Elektro',
                 'phone' => '089999999999',
                 'verified' => true,
+                'validator_prodi_id' => $prodis->where('code', 'TE')->first()->id ?? 3,
             ]
         );
     }

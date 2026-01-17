@@ -32,23 +32,38 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        $data = $request->validated();
-        $data['seller_id'] = auth()->id();
-        $data['status'] = 'pending_verif'; // Menunggu verifikasi
+        try {
+            $data = $request->validated();
+            $data['seller_id'] = auth()->id();
+            $data['status'] = 'pending_verif'; // Menunggu verifikasi
 
-        // Handle single image upload
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $data['images'] = [$path];
+            // Handle single image upload
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                
+                // Validate file
+                if (!$file->isValid()) {
+                    return back()->withErrors(['image' => 'File gambar tidak valid'])->withInput();
+                }
+                
+                // Store with original extension
+                $path = $file->store('products', 'public');
+                $data['images'] = [$path];
+            } else {
+                return back()->withErrors(['image' => 'Foto produk wajib diupload'])->withInput();
+            }
+
+            // Set fixed revenue share: 3% untuk validator, 97% untuk penjual
+            $data['seller_proposed_validator_share'] = 3;
+            $data['revenue_share_status'] = 'pending';
+
+            Product::create($data);
+
+            return redirect()->route('seller.dashboard')->with('success', 'Produk berhasil ditambahkan dan menunggu verifikasi.');
+        } catch (\Exception $e) {
+            \Log::error('Error uploading product: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat upload produk. Silakan coba lagi.'])->withInput();
         }
-
-        // Set fixed revenue share: 3% untuk validator, 97% untuk penjual
-        $data['seller_proposed_validator_share'] = 3;
-        $data['revenue_share_status'] = 'pending';
-
-        Product::create($data);
-
-        return redirect()->route('seller.dashboard')->with('success', 'Produk berhasil ditambahkan dan menunggu verifikasi.');
     }
 
     /**

@@ -63,9 +63,10 @@ class ValidatorController extends Controller
         ];
 
         // Recent transactions (10 terbaru)
-        $recentTransactions = TransactionLog::where('validator_id', $user->id)
-            ->with(['order', 'seller'])
-            ->latest()
+        $recentTransactions = TransactionLog::where('user_id', $user->id)
+            ->where('type', 'validator_commission')
+            ->with(['order.items.product.seller'])
+            ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
         

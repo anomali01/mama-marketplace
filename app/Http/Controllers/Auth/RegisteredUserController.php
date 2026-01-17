@@ -53,7 +53,12 @@ class RegisteredUserController extends Controller
      */
     public function createValidator(): View
     {
-        $prodis = \App\Models\StudyProgram::all();
+        // Get all prodis with their validator status
+        $prodis = \App\Models\StudyProgram::withCount(['validators' => function($query) {
+            $query->where('verified', true)
+                  ->orWhere('verified', false); // Include pending
+        }])->get();
+        
         return view('auth.register-validator', compact('prodis'));
     }
 
@@ -89,15 +94,19 @@ class RegisteredUserController extends Controller
             'validator_prodi_id.exists' => 'Program studi tidak valid',
         ]);
 
-        // Cek apakah prodi sudah punya validator
+        // Cek apakah prodi sudah punya validator (verified atau pending)
         $existingValidator = User::where('role', 'validator')
             ->where('validator_prodi_id', $request->validator_prodi_id)
-            ->where('verified', true)
+            ->where(function($query) {
+                $query->where('verified', true)
+                      ->orWhere('verified', false); // Include pending validators
+            })
             ->first();
 
         if ($existingValidator) {
+            $status = $existingValidator->verified ? 'aktif' : 'sedang menunggu verifikasi';
             return back()->withErrors([
-                'validator_prodi_id' => 'Program studi ini sudah memiliki validator.'
+                'validator_prodi_id' => 'Program studi ini sudah memiliki validator yang ' . $status . ' (' . $existingValidator->name . '). Hanya 1 validator per prodi yang diperbolehkan.'
             ])->withInput();
         }
 

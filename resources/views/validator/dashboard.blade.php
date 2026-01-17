@@ -748,15 +748,17 @@
                                     <tr style="border-bottom: 1px solid #f1f5f9;">
                                         <td style="padding: 10px; color: #475569;">{{ $transaction->created_at->format('d M Y, H:i') }}</td>
                                         <td style="padding: 10px;">
-                                            @if($transaction->type === 'in')
-                                                <span style="background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">💰 Masuk</span>
+                                            @if($transaction->type === 'validator_commission')
+                                                <span style="background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">💰 Komisi</span>
+                                            @elseif($transaction->type === 'order_income')
+                                                <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">📦 Pesanan</span>
                                             @else
-                                                <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">📤 Keluar</span>
+                                                <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">📤 {{ ucfirst($transaction->type) }}</span>
                                             @endif
                                         </td>
-                                        <td style="padding: 10px; color: #475569;">{{ $transaction->seller->name ?? '-' }}</td>
-                                        <td style="padding: 10px; text-align: right; font-weight: 600; color: {{ $transaction->type === 'in' ? '#16a34a' : '#dc2626' }};">
-                                            {{ $transaction->type === 'in' ? '+' : '-' }}Rp{{ number_format($transaction->amount, 0, ',', '.') }}
+                                        <td style="padding: 10px; color: #475569;">{{ $transaction->order->items->first()?->product?->seller?->name ?? $transaction->description ?? '-' }}</td>
+                                        <td style="padding: 10px; text-align: right; font-weight: 600; color: #16a34a;">
+                                            +Rp{{ number_format($transaction->amount, 0, ',', '.') }}
                                         </td>
                                         <td style="padding: 10px; text-align: center;">
                                             @if($transaction->status === 'completed')

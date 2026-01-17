@@ -71,4 +71,14 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    /**
+     * Get the seller from the first order item's product
+     * Assumes all items in an order are from the same seller
+     */
+    public function getSellerAttribute()
+    {
+        $firstItem = $this->items()->with('product.seller')->first();
+        return $firstItem?->product?->seller;
+    }
 }

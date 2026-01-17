@@ -268,12 +268,18 @@
                     <select name="validator_prodi_id" class="form-control" required>
                         <option value="">Pilih Program Studi</option>
                         @foreach($prodis as $prodi)
-                            <option value="{{ $prodi->id }}" {{ old('validator_prodi_id') == $prodi->id ? 'selected' : '' }}>
+                            @php
+                                $hasValidator = $prodi->validators_count > 0;
+                            @endphp
+                            <option value="{{ $prodi->id }}" 
+                                {{ old('validator_prodi_id') == $prodi->id ? 'selected' : '' }}
+                                {{ $hasValidator ? 'disabled' : '' }}>
                                 {{ $prodi->name }} ({{ $prodi->code }})
+                                {{ $hasValidator ? ' - Sudah ada validator' : '' }}
                             </option>
                         @endforeach
                     </select>
-                    <span class="helper-text">Anda hanya akan memvalidasi produk dari prodi ini</span>
+                    <span class="helper-text">⚠️ Hanya 1 validator per prodi yang diperbolehkan. Pilih prodi yang tersedia (tidak disabled).</span>
                 </div>
 
                 <div class="form-group">

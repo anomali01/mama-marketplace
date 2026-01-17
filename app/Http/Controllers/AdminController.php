@@ -53,7 +53,27 @@ class AdminController extends Controller
             return back()->with('error', 'User bukan validator.');
         }
 
+        // Cek apakah sudah ada validator verified untuk prodi ini
+        $existingValidator = User::where('role', 'validator')
+            ->where('validator_prodi_id', $validator->validator_prodi_id)
+            ->where('verified', true)
+            ->where('id', '!=', $validator->id)
+            ->first();
+
+        if ($existingValidator) {
+            return back()->with('error', 'Program studi ini sudah memiliki validator aktif: ' . $existingValidator->name . '. Hanya 1 validator per prodi yang diperbolehkan.');
+        }
+
         $validator->update(['verified' => true]);
+
+        // Send notification to validator
+        \App\Models\Notification::create([
+            'user_id' => $validator->id,
+            'title' => 'Akun Validator Disetujui! 🎉',
+            'message' => 'Selamat! Akun validator Anda telah disetujui. Anda sekarang dapat memverifikasi produk dari prodi ' . ($validator->validatorProdi->name ?? '-'),
+            'type' => 'system',
+            'read' => false,
+        ]);
 
         return back()->with('success', 'Validator "' . $validator->name . '" berhasil diverifikasi!');
     }

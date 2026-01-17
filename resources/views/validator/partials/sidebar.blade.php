@@ -1,7 +1,25 @@
 @php
     use App\Models\Product;
     use App\Models\Order;
-    $pendingCount = Product::where('status', 'pending_verif')->count();
+    
+    $user = auth()->user();
+    $prodiName = $user->validatorProdi->name ?? '';
+    
+    // Count pending products dari prodi validator
+    $pendingCount = Product::where('status', 'pending_verif')
+        ->whereHas('seller', function($query) use ($prodiName) {
+            $query->where(function($q) use ($prodiName) {
+                $q->where('prodi', 'LIKE', '%' . $prodiName . '%')
+                  ->orWhere(function($q2) use ($prodiName) {
+                      $shortName = str_replace(['Teknik ', 'Sistem '], '', $prodiName);
+                      if ($shortName !== $prodiName) {
+                          $q2->where('prodi', 'LIKE', '%' . $shortName . '%');
+                      }
+                  });
+            });
+        })
+        ->count();
+        
     $pendingPaymentsCount = Order::where('validator_id', auth()->id())
         ->where('payment_status', 'pending_confirmation')
         ->whereNotNull('payment_proof')
