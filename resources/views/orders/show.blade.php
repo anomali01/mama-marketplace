@@ -545,7 +545,7 @@
 
         <!-- Rekening Validator (for Transfer Payment) -->
         @if($order->payment_method === 'transfer')
-            @if($order->validator)
+            @if($order->validator && $order->validator->bank_name && $order->validator->account_number)
                 <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);">
                     <h2 style="color: white; font-size: 20px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-university"></i>
@@ -554,19 +554,21 @@
                     
                     <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
                         <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Nama Bank</div>
-                        <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">{{ $order->validator->bank_name ?? 'BCA' }}</div>
+                        <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">{{ $order->validator->bank_name }}</div>
                     </div>
 
                     <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
                         <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Nomor Rekening</div>
-                        <div style="font-size: 26px; font-weight: 700; letter-spacing: 2px; font-family: 'Courier New', monospace;">
-                        {{ $order->validator->account_number ?? '-' }}
+                        <div style="font-size: 26px; font-weight: 700; letter-spacing: 2px; font-family: 'Courier New', monospace;">{{ $order->validator->account_number }}</div>
                     </div>
-                </div>
 
-                <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
-                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Atas Nama</div>
-                    <div style="font-size: 19px; font-weight: 600;">{{ $order->validator->account_holder_name ?? $order->validator->name }}</div>
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Atas Nama</div>
+                        <div style="font-size: 19px; font-weight: 600;">{{ $order->validator->name }}</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Validator Prodi {{ $order->validator->prodi }}</div>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 10px; padding: 18px; margin-bottom: 14px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
                         <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Total yang Harus Ditransfer</div>
                         <div style="font-size: 32px; font-weight: 700; color: #ffd700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                             Rp{{ number_format($order->total_amount, 0, ',', '.') }}

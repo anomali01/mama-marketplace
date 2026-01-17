@@ -559,6 +559,20 @@
                 </a>
             </li>
 
+            <li class="sidebar-menu-title">Verifikasi Pembayaran</li>
+            <li class="sidebar-menu-item">
+                <a href="{{ route('validator.orders', ['status' => 'pending_confirmation']) }}" class="sidebar-menu-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Verifikasi Transfer
+                    @if(isset($pendingPayments) && $pendingPayments > 0)
+                        <span class="sidebar-menu-badge">{{ $pendingPayments }}</span>
+                    @endif
+                </a>
+            </li>
+
             <li class="sidebar-menu-title">Penjual</li>
             <li class="sidebar-menu-item">
                 <a href="{{ route('validator.sellers.index') }}" class="sidebar-menu-link">
@@ -569,6 +583,9 @@
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
                     Daftar Penjual
+                    @if(isset($pendingSellers) && count($pendingSellers) > 0)
+                        <span class="sidebar-menu-badge">{{ count($pendingSellers) }}</span>
+                    @endif
                 </a>
             </li>
 
@@ -580,6 +597,9 @@
                         <line x1="1" y1="10" x2="23" y2="10"/>
                     </svg>
                     Permintaan Penarikan
+                    @if(isset($pendingWithdrawals) && $pendingWithdrawals > 0)
+                        <span class="sidebar-menu-badge">{{ $pendingWithdrawals }}</span>
+                    @endif
                 </a>
             </li>
         </ul>
@@ -603,6 +623,18 @@
         <header class="header">
             <h1 class="header-title">Dashboard</h1>
             <div class="header-user">
+                <!-- Notification Bell -->
+                <div class="header-notification" style="position: relative; margin-right: 20px;">
+                    <a href="{{ route('notifications.index') }}" style="color: #64748b; position: relative; display: flex; align-items: center;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        @if(isset($unreadNotifications) && $unreadNotifications > 0)
+                            <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center;">{{ $unreadNotifications }}</span>
+                        @endif
+                    </a>
+                </div>
                 <div class="header-user-info">
                     <div class="header-user-name">{{ $user->name }}</div>
                     <div class="header-user-role">Validator</div>

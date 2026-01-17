@@ -313,7 +313,14 @@
 
                 <div class="form-group">
                     <label class="form-label">Program Studi</label>
-                    <input type="text" name="prodi" class="form-input" placeholder="Contoh: Teknik Informatika" value="{{ old('prodi') }}" required>
+                    <select name="prodi" class="form-select" required>
+                        <option value="">-- Pilih Program Studi --</option>
+                        @foreach($studyPrograms as $prodi)
+                            <option value="{{ $prodi->name }}" {{ old('prodi') == $prodi->name ? 'selected' : '' }}>
+                                {{ $prodi->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="form-group">

@@ -77,17 +77,21 @@ class CheckoutController extends Controller
                             ->first();
                         
                         if ($prodi) {
-                            // Find the ONLY verified validator for seller's prodi
-                            // System ensures only 1 validator per prodi
+                            // Find verified validator for seller's prodi
+                            // MUST have complete bank info (bank_name, account_number)
                             $validator = \App\Models\User::where('role', 'validator')
                                 ->where('validator_prodi_id', $prodi->id)
                                 ->where('verified', true)
+                                ->whereNotNull('bank_name')
+                                ->whereNotNull('account_number')
+                                ->where('bank_name', '!=', '')
+                                ->where('account_number', '!=', '')
                                 ->first();
                         }
                     }
                     
                     // If validator found, payment will be transferred to validator
-                    // If no validator, order can still proceed but without validator confirmation
+                    // If no validator with complete bank info, order can still proceed but without validator confirmation
 
                     // Calculate total
                     foreach ($items as $item) {

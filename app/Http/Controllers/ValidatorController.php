@@ -126,7 +126,27 @@ class ValidatorController extends Controller
             ->with('user')
             ->get();
         
-        return view('validator.dashboard', compact('user', 'stats', 'transactionStats', 'recentTransactions', 'pendingSellers', 'pendingProducts', 'sellerBalances'));
+        // Count unread notifications for validator
+        $unreadNotifications = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+        
+        // Get pending payment verifications count
+        $pendingPayments = Order::where('validator_id', $user->id)
+            ->where('payment_status', 'pending_confirmation')
+            ->whereNotNull('payment_proof')
+            ->count();
+        
+        // Get pending withdrawal requests count
+        $pendingWithdrawals = \App\Models\WithdrawalRequest::where('validator_id', $user->id)
+            ->where('status', 'pending')
+            ->count();
+        
+        return view('validator.dashboard', compact(
+            'user', 'stats', 'transactionStats', 'recentTransactions', 
+            'pendingSellers', 'pendingProducts', 'sellerBalances',
+            'unreadNotifications', 'pendingPayments', 'pendingWithdrawals'
+        ));
     }
 
     /**

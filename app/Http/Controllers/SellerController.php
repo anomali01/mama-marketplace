@@ -27,7 +27,10 @@ class SellerController extends Controller
             return redirect()->route('seller.dashboard');
         }
         
-        return view('seller.register');
+        // Get all study programs for dropdown
+        $studyPrograms = StudyProgram::orderBy('name')->get();
+        
+        return view('seller.register', compact('studyPrograms'));
     }
     
     /**

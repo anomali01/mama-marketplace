@@ -57,7 +57,30 @@ class ProductController extends Controller
             $data['seller_proposed_validator_share'] = 3;
             $data['revenue_share_status'] = 'pending';
 
-            Product::create($data);
+            $product = Product::create($data);
+
+            // Kirim notifikasi ke validator prodi penjual
+            $seller = auth()->user();
+            $studyProgram = \App\Models\StudyProgram::where('name', 'LIKE', '%' . $seller->prodi . '%')->first();
+            
+            if ($studyProgram) {
+                $validator = \App\Models\User::where('role', 'validator')
+                    ->where('validator_prodi_id', $studyProgram->id)
+                    ->where('verified', true)
+                    ->whereNotNull('bank_name')
+                    ->first();
+                
+                if ($validator) {
+                    \App\Models\Notification::create([
+                        'user_id' => $validator->id,
+                        'type' => 'product_verification',
+                        'title' => 'Produk Baru Perlu Verifikasi',
+                        'message' => $seller->name . ' dari prodi ' . $seller->prodi . ' menambahkan produk baru "' . $product->name . '". Silakan verifikasi.',
+                        'related_id' => $product->id,
+                        'is_read' => false,
+                    ]);
+                }
+            }
 
             return redirect()->route('seller.dashboard')->with('success', 'Produk berhasil ditambahkan dan menunggu verifikasi.');
         } catch (\Exception $e) {

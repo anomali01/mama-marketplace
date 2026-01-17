@@ -124,7 +124,19 @@ class OrderController extends Controller
                 'payment_status' => 'pending_confirmation',
             ]);
 
-            return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu konfirmasi penjual.');
+            // Kirim notifikasi ke validator untuk verifikasi pembayaran
+            if ($order->validator_id) {
+                \App\Models\Notification::create([
+                    'user_id' => $order->validator_id,
+                    'type' => 'payment_verification',
+                    'title' => 'Verifikasi Pembayaran Baru',
+                    'message' => 'Pembeli telah mengupload bukti pembayaran untuk pesanan ' . $order->order_code . '. Silakan verifikasi.',
+                    'related_id' => $order->id,
+                    'is_read' => false,
+                ]);
+            }
+
+            return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu konfirmasi validator.');
         }
 
         return back()->with('error', 'Gagal mengupload bukti pembayaran.');
