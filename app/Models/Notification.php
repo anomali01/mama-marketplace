@@ -18,6 +18,7 @@ class Notification extends Model
         'image',
         'action_url',
         'data',
+        'related_id',
         'is_read',
         'read_at',
     ];
