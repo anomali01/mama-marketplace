@@ -143,55 +143,96 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'required_without:attachment|nullable|string|max:2000',
-            'attachment' => 'nullable|file|max:10240', // max 10MB
-        ]);
+        try {
+            // Validate request
+            $validated = $request->validate([
+                'receiver_id' => 'required|exists:users,id',
+                'message' => 'required_without:attachment|nullable|string|max:2000',
+                'attachment' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,pdf,doc,docx,zip,rar', // max 10MB
+            ], [
+                'receiver_id.required' => 'Penerima pesan tidak valid.',
+                'receiver_id.exists' => 'Penerima pesan tidak ditemukan.',
+                'message.required_without' => 'Pesan atau lampiran harus diisi.',
+                'message.max' => 'Pesan terlalu panjang (maksimal 2000 karakter).',
+                'attachment.max' => 'Ukuran file terlalu besar (maksimal 10MB).',
+                'attachment.mimes' => 'Tipe file tidak didukung.',
+            ]);
 
-        $userId = Auth::id();
-        
-        $data = [
-            'sender_id' => $userId,
-            'receiver_id' => $request->receiver_id,
-            'message' => $request->message,
-        ];
-
-        // Handle file upload
-        if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $path = $file->store('chat-attachments', 'public');
-            $data['attachment'] = $path;
-            $data['attachment_name'] = $file->getClientOriginalName();
+            $userId = Auth::id();
             
-            // Determine type
-            $mimeType = $file->getMimeType();
-            if (str_starts_with($mimeType, 'image/')) {
-                $data['attachment_type'] = 'image';
-            } else {
-                $data['attachment_type'] = 'file';
+            $data = [
+                'sender_id' => $userId,
+                'receiver_id' => $request->receiver_id,
+                'message' => $request->message,
+            ];
+
+            // Handle file upload
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                
+                // Additional file validation
+                if (!$file->isValid()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File upload gagal. Silakan coba lagi.',
+                    ], 422);
+                }
+                
+                $path = $file->store('chat-attachments', 'public');
+                $data['attachment'] = $path;
+                $data['attachment_name'] = $file->getClientOriginalName();
+                
+                // Determine type
+                $mimeType = $file->getMimeType();
+                if (str_starts_with($mimeType, 'image/')) {
+                    $data['attachment_type'] = 'image';
+                } else {
+                    $data['attachment_type'] = 'file';
+                }
             }
-        }
 
-        $message = Message::create($data);
+            $message = Message::create($data);
 
-        // Create notification for receiver
-        $sender = User::find($userId);
-        \App\Models\Notification::createChatNotification(
-            $request->receiver_id,
-            $sender->name,
-            $request->message ?? 'Mengirim file',
-            $userId
-        );
+            // Create notification for receiver
+            try {
+                $sender = User::find($userId);
+                \App\Models\Notification::createChatNotification(
+                    $request->receiver_id,
+                    $sender->name,
+                    $request->message ?? 'Mengirim file',
+                    $userId
+                );
+            } catch (\Exception $e) {
+                // Log notification error but don't fail the message send
+                \Log::warning('Failed to create chat notification: ' . $e->getMessage());
+            }
 
-        if ($request->ajax()) {
+            // Always return JSON for AJAX requests or return JSON by default
             return response()->json([
                 'success' => true,
                 'message' => $message->load('sender'),
             ]);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Failed to send message: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'receiver_id' => $request->receiver_id ?? null,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim pesan. Silakan coba lagi.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
-
-        return back();
     }
 
     /**

@@ -625,6 +625,16 @@
                 padding-bottom: calc(10px + env(safe-area-inset-bottom));
             }
         }
+
+        /* Loading spinner animation */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
@@ -893,14 +903,23 @@
             e.preventDefault();
             
             const message = chatInput.value.trim();
-            if (!message && !selectedFile) return;
+            if (!message && !selectedFile) {
+                alert('Silakan ketik pesan atau pilih file.');
+                return;
+            }
             
+            // Disable send button and show loading state
             sendBtn.disabled = true;
+            const originalBtnHTML = sendBtn.innerHTML;
+            sendBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle></svg>';
             
             const formData = new FormData();
             formData.append('_token', '{{ csrf_token() }}');
             formData.append('receiver_id', '{{ $seller->id }}');
-            formData.append('message', message);
+            
+            if (message) {
+                formData.append('message', message);
+            }
             
             if (selectedFile) {
                 formData.append('attachment', selectedFile);
@@ -909,8 +928,32 @@
             try {
                 const response = await fetch('{{ route("messages.store") }}', {
                     method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
                     body: formData
                 });
+                
+                // Check if response is ok
+                if (!response.ok) {
+                    // Try to parse error response
+                    let errorMessage = 'Gagal mengirim pesan. Silakan coba lagi.';
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.message) {
+                            errorMessage = errorData.message;
+                        } else if (errorData.errors) {
+                            // Format validation errors
+                            const errors = Object.values(errorData.errors).flat();
+                            errorMessage = errors.join('\n');
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing error response:', parseError);
+                    }
+                    throw new Error(errorMessage);
+                }
                 
                 const data = await response.json();
                 
@@ -927,13 +970,18 @@
                     // Remove empty chat if exists
                     const emptyChat = messagesArea.querySelector('.empty-chat');
                     if (emptyChat) emptyChat.remove();
+                } else {
+                    // Handle unsuccessful response
+                    throw new Error(data.message || 'Gagal mengirim pesan.');
                 }
             } catch (error) {
                 console.error('Error sending message:', error);
-                alert('Gagal mengirim pesan. Silakan coba lagi.');
+                alert(error.message || 'Gagal mengirim pesan. Silakan coba lagi.');
+            } finally {
+                // Re-enable send button and restore original state
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = originalBtnHTML;
             }
-            
-            sendBtn.disabled = false;
         });
 
         // Add message to UI
