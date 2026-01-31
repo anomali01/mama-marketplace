@@ -16,6 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'validator' => \App\Http\Middleware\ValidatorMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+        
+        // Exclude routes from CSRF verification for serverless environment
+        $middleware->validateCsrfTokens(except: [
+            'login',
+            'register',
+            'logout',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
