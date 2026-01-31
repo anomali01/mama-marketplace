@@ -33,6 +33,8 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
+        "APP_URL": "https://mama-marketplace.vercel.app",
+        "ASSET_URL": "https://mama-marketplace.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
@@ -40,7 +42,7 @@
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "VIEW_COMPILED_PATH": "/tmp/views",
         "CACHE_DRIVER": "array",
-        "SESSION_DRIVER": "array",
+        "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr"
     }
 }
