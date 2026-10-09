@@ -330,7 +330,8 @@
 
             <div class="login-link">
                 Sudah punya akun? <a href="{{ route('login') }}">Login di sini</a><br>
-                <a href="{{ route('register') }}" style="color: #0ea5e9; margin-top: 8px; display: inline-block;">Daftar sebagai User Biasa</a>
+                <a href="{{ route('register') }}" style="color: #0ea5e9; margin-top: 8px; display: inline-block;">Daftar sebagai User Biasa</a><br>
+                <a href="{{ route('home') }}" style="color: #64748b; margin-top: 8px; display: inline-block; font-size: 13px;">← Kembali ke Beranda</a>
             </div>
         </div>
     </div>

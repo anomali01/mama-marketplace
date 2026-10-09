@@ -249,7 +249,8 @@
             </form>
 
             <p class="login-link">
-                Sudah punya akun? <a href="{{ route('login') }}">Login disini</a>
+                Sudah punya akun? <a href="{{ route('login') }}">Login disini</a><br>
+                <a href="{{ route('home') }}" style="color: white; margin-top: 10px; display: inline-block; font-weight: 500; font-size: 13px; text-decoration: underline;">← Kembali ke Beranda</a>
             </p>
         </div>
     </div>

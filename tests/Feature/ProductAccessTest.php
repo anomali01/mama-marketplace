@@ -63,4 +63,11 @@ class ProductAccessTest extends TestCase
         $response = $this->get(route('products.index'));
         $response->assertOk();
     }
+
+    /** @test */
+    public function anyone_can_view_the_home_page()
+    {
+        $response = $this->get(route('home'));
+        $response->assertOk();
+    }
 }

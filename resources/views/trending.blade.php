@@ -77,6 +77,27 @@
             50% { transform: scale(1.1); }
         }
 
+        .header-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #ff6b35;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .header-login-btn:hover {
+            background: #fff5eb;
+            transform: translateY(-1px);
+        }
+
         /* Main Content */
         .main-content {
             padding: 16px;
@@ -423,6 +444,11 @@
                 </svg>
                 Trending
             </h1>
+            @guest
+            <a href="{{ route('login') }}" class="header-login-btn">
+                Masuk
+            </a>
+            @endguest
         </div>
     </header>
 
@@ -668,13 +694,14 @@
             </svg>
             <span>Trending</span>
         </a>
-        <a href="{{ route('orders.index') ?? '#' }}" class="nav-item">
+        <a href="{{ route('orders.index') }}" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                 <line x1="1" y1="10" x2="23" y2="10"></line>
             </svg>
             <span>Pesanan</span>
         </a>
+        @auth
         <a href="{{ route('profile.edit') }}" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -682,6 +709,16 @@
             </svg>
             <span>Profil</span>
         </a>
+        @else
+        <a href="{{ route('login') }}" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            <span>Masuk</span>
+        </a>
+        @endauth
     </nav>
 </body>
 </html>

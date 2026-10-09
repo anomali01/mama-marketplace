@@ -111,6 +111,27 @@
             text-align: center;
         }
 
+        .header-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #0080e0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .header-login-btn:hover {
+            background: #f0f7ff;
+            transform: translateY(-1px);
+        }
+
         /* Categories */
         .categories {
             display: flex;
@@ -624,21 +645,27 @@
                 <input type="text" id="searchInput" placeholder="Search" value="{{ request('search') }}">
             </div>
             <div class="header-icons">
-                <a href="{{ route('cart.index') ?? '#' }}" class="icon-btn">
+                <a href="{{ route('cart.index') }}" class="icon-btn" title="Keranjang">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
-                    <span class="badge">0</span>
+                    <span class="badge" id="headerCartBadge" style="display: none;">0</span>
                 </a>
-                <a href="{{ route('notifications.index') }}" class="icon-btn" id="headerNotifIcon">
+                @auth
+                <a href="{{ route('notifications.index') }}" class="icon-btn" id="headerNotifIcon" title="Notifikasi">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
                     <span class="badge" id="headerNotifBadge" style="display: none;">0</span>
                 </a>
+                @else
+                <a href="{{ route('login') }}" class="header-login-btn">
+                    Masuk
+                </a>
+                @endauth
             </div>
         </div>
 
@@ -824,6 +851,7 @@
             </svg>
             <span>Pesanan</span>
         </a>
+        @auth
         <a href="{{ route('profile.edit') }}" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -831,6 +859,16 @@
             </svg>
             <span>Profil</span>
         </a>
+        @else
+        <a href="{{ route('login') }}" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            <span>Masuk</span>
+        </a>
+        @endauth
     </nav>
 
     <script>
@@ -912,6 +950,23 @@
         fetchNotificationCount();
         setInterval(fetchNotificationCount, 30000);
         @endauth
+
+        // Cart Badge update
+        function updateCartBadge() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('mama-cart') || '[]');
+                const badge = document.getElementById('headerCartBadge');
+                if (badge) {
+                    if (cart.length > 0) {
+                        badge.textContent = cart.length > 99 ? '99+' : cart.length;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (e) {}
+        }
+        updateCartBadge();
     </script>
 </body>
 </html>

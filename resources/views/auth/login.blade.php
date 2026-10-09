@@ -349,7 +349,8 @@
 
             <p class="register-link">
                 Belum punya akun? <a href="{{ route('register') }}">Sign up disini</a><br>
-                <a href="{{ route('register.validator') }}" style="color: #fbbf24; margin-top: 8px; display: inline-block; font-weight: 600;">Daftar sebagai Validator</a>
+                <a href="{{ route('register.validator') }}" style="color: #fbbf24; margin-top: 8px; display: inline-block; font-weight: 600;">Daftar sebagai Validator</a><br>
+                <a href="{{ route('home') }}" style="color: white; margin-top: 12px; display: inline-block; font-weight: 500; font-size: 13px; text-decoration: underline;">← Kembali ke Beranda</a>
             </p>
         </div>
     </div>

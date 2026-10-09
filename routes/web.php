@@ -9,22 +9,33 @@ use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ValidatorController;
 use App\Http\Controllers\CheckoutController;
 
-// --- ROUTE BUATAN KITA (PRIORITAS) ---
+// --- ROUTE PUBLIK (Bisa diakses langsung tanpa harus login) ---
 
-// 1. Halaman Landing
-Route::get('/', function () {
+// 1. Beranda / Marketplace Utama
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index']);
+Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+Route::get('/search', [HomeController::class, 'search'])->name('search');
+Route::get('/trending', [HomeController::class, 'trending'])->name('trending');
+
+// 2. Produk (Publik untuk melihat)
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+// 3. Keranjang (Bisa dilihat tanpa login)
+Route::get('/cart', function () {
+    return view('cart.index');
+})->name('cart.index');
+
+// 4. Halaman Landing (Opsional)
+Route::get('/landing', function () {
     return view('auth.landing');
 })->name('landing');
 
-// 2. Home/Dashboard setelah login
+// --- ROUTE YANG MEMERLUKAN LOGIN (AUTH) ---
 Route::middleware(['auth'])->group(function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
-    Route::get('/search', [HomeController::class, 'search'])->name('search');
-    Route::get('/trending', [HomeController::class, 'trending'])->name('trending');
-    
-    // Products
-    Route::resource('products', ProductController::class);
+    // Products management (hanya penjual yang login)
+    Route::resource('products', ProductController::class)->except(['index', 'show']);
     
     // Orders
     Route::resource('orders', OrderController::class);
