@@ -124,68 +124,79 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-        $categories = Category::all();
+        $dbError = null;
+        $categories = collect();
+        $trendingProducts = collect();
         
-        $query = Product::with(['category', 'seller.studyProgram']);
-        
-        // Filter by category if selected
-        if ($request->has('category') && $request->category != 'all') {
-            $query->where('category_id', $request->category);
-        }
-        
-        // Get trending products (produk dengan penjualan tertinggi dan terbaru)
-        $trendingProducts = Product::with(['category', 'seller.studyProgram'])
-            ->where('status', 'verified')
-            ->withCount('orderItems') // Hitung jumlah order items
-            ->orderByDesc('order_items_count') // Urutkan berdasarkan paling banyak dibeli
-            ->orderByDesc('created_at') // Kemudian yang terbaru
-            ->take(6) // Ambil 6 produk trending
-            ->get();
-        
-        // Search functionality with AI-like matching
-        // Only search if user explicitly entered a search term
-        if ($request->has('search') && $request->search != '' && trim($request->search) != '') {
-            $searchTerm = $request->search;
-            $keywords = $this->getSearchKeywords($searchTerm);
-            
-            // Build query dengan OR conditions untuk semua keywords
-            $query->where(function($q) use ($keywords) {
-                foreach ($keywords as $keyword) {
-                    $q->orWhere('name', 'like', '%' . $keyword . '%')
-                      ->orWhere('description', 'like', '%' . $keyword . '%');
-                }
-            });
-            
-            // Tambahkan sorting berdasarkan relevansi (prioritas nama produk)
-            // Produk yang memiliki keyword di nama akan muncul lebih dulu
-            $firstKeyword = $keywords[0] ?? $searchTerm;
-            $query->orderByRaw("CASE 
-                WHEN LOWER(name) LIKE ? THEN 1
-                WHEN LOWER(name) LIKE ? THEN 2
-                WHEN LOWER(description) LIKE ? THEN 3
-                ELSE 4
-            END", [
-                '%' . strtolower($firstKeyword) . '%',
-                '%' . strtolower($searchTerm) . '%',
-                '%' . strtolower($searchTerm) . '%'
-            ]);
-        } else {
-            // Jika tidak ada search, urutkan berdasarkan terbaru
-            $query->latest();
-        }
-        
-        // Only show active products if status column exists
         try {
-            $products = $query->where('status', 'verified')
-                             ->paginate(10);
-        } catch (\Exception $e) {
-            // If status column doesn't exist, just get all products
-            $products = Product::with(['category', 'seller'])
-                              ->latest()
-                              ->paginate(10);
+            $categories = Category::all();
+        } catch (\Throwable $e) {
+            $dbError = $e->getMessage();
+            \Log::warning('HomeController categories error: ' . $dbError);
         }
         
-        return view('home', compact('products', 'categories', 'trendingProducts'));
+        try {
+            // Get trending products
+            $trendingProducts = Product::with(['category', 'seller.studyProgram'])
+                ->where('status', 'verified')
+                ->withCount('orderItems')
+                ->orderByDesc('order_items_count')
+                ->orderByDesc('created_at')
+                ->take(6)
+                ->get();
+        } catch (\Throwable $e) {
+            \Log::warning('HomeController trending error: ' . $e->getMessage());
+        }
+        
+        try {
+            $query = Product::with(['category', 'seller.studyProgram']);
+            
+            // Filter by category if selected
+            if ($request->has('category') && $request->category != 'all') {
+                $query->where('category_id', $request->category);
+            }
+            
+            // Search functionality with AI-like matching
+            if ($request->has('search') && $request->search != '' && trim($request->search) != '') {
+                $searchTerm = $request->search;
+                $keywords = $this->getSearchKeywords($searchTerm);
+                
+                $query->where(function($q) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $q->orWhere('name', 'like', '%' . $keyword . '%')
+                          ->orWhere('description', 'like', '%' . $keyword . '%');
+                    }
+                });
+                
+                $firstKeyword = $keywords[0] ?? $searchTerm;
+                $query->orderByRaw("CASE 
+                    WHEN LOWER(name) LIKE ? THEN 1
+                    WHEN LOWER(name) LIKE ? THEN 2
+                    WHEN LOWER(description) LIKE ? THEN 3
+                    ELSE 4
+                END", [
+                    '%' . strtolower($firstKeyword) . '%',
+                    '%' . strtolower($searchTerm) . '%',
+                    '%' . strtolower($searchTerm) . '%'
+                ]);
+            } else {
+                $query->latest();
+            }
+            
+            $products = $query->where('status', 'verified')->paginate(10);
+        } catch (\Throwable $e) {
+            $dbError = $dbError ?? $e->getMessage();
+            \Log::warning('HomeController products query error: ' . $e->getMessage());
+            $products = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+        
+        return view('home', compact('products', 'categories', 'trendingProducts', 'dbError'));
     }
     
     /**
@@ -193,47 +204,42 @@ class HomeController extends Controller
      */
     public function search(Request $request)
     {
-        $query = Product::with(['category', 'seller']);
-        
-        if ($request->has('q') && $request->q != '') {
-            $searchTerm = $request->q;
-            $keywords = $this->getSearchKeywords($searchTerm);
-            
-            // Build query dengan OR conditions
-            $query->where(function($q) use ($keywords) {
-                foreach ($keywords as $keyword) {
-                    $q->orWhere('name', 'like', '%' . $keyword . '%')
-                      ->orWhere('description', 'like', '%' . $keyword . '%');
-                }
-            });
-            
-            // Sorting berdasarkan relevansi
-            $firstKeyword = $keywords[0] ?? $searchTerm;
-            $query->orderByRaw("CASE 
-                WHEN LOWER(name) LIKE ? THEN 1
-                WHEN LOWER(name) LIKE ? THEN 2
-                WHEN LOWER(description) LIKE ? THEN 3
-                ELSE 4
-            END", [
-                '%' . strtolower($firstKeyword) . '%',
-                '%' . strtolower($searchTerm) . '%',
-                '%' . strtolower($searchTerm) . '%'
-            ]);
-        }
-        
-        if ($request->has('category') && $request->category != 'all') {
-            $query->where('category_id', $request->category);
-        }
-        
         try {
-            $products = $query->where('status', 'verified')
-                             ->take(20)
-                             ->get();
-        } catch (\Exception $e) {
-            $products = $query->take(20)->get();
+            $query = Product::with(['category', 'seller']);
+            
+            if ($request->has('q') && $request->q != '') {
+                $searchTerm = $request->q;
+                $keywords = $this->getSearchKeywords($searchTerm);
+                
+                $query->where(function($q) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $q->orWhere('name', 'like', '%' . $keyword . '%')
+                          ->orWhere('description', 'like', '%' . $keyword . '%');
+                    }
+                });
+                
+                $firstKeyword = $keywords[0] ?? $searchTerm;
+                $query->orderByRaw("CASE 
+                    WHEN LOWER(name) LIKE ? THEN 1
+                    WHEN LOWER(name) LIKE ? THEN 2
+                    WHEN LOWER(description) LIKE ? THEN 3
+                    ELSE 4
+                END", [
+                    '%' . strtolower($firstKeyword) . '%',
+                    '%' . strtolower($searchTerm) . '%',
+                    '%' . strtolower($searchTerm) . '%'
+                ]);
+            }
+            
+            if ($request->has('category') && $request->category != 'all') {
+                $query->where('category_id', $request->category);
+            }
+            
+            $products = $query->where('status', 'verified')->take(20)->get();
+            return response()->json($products);
+        } catch (\Throwable $e) {
+            return response()->json([]);
         }
-        
-        return response()->json($products);
     }
 
     /**
@@ -242,62 +248,63 @@ class HomeController extends Controller
     public function trending(Request $request)
     {
         $user = auth()->user();
-        $selectedProdi = $request->get('prodi', 'all'); // Default: semua
-        
-        // Get all study programs (tampilkan semua prodi yang tersedia)
-        $studyPrograms = \App\Models\StudyProgram::orderBy('name')->get();
-        
-        // Trending Umum - Berdasarkan jumlah pembelian (semua prodi)
-        $trendingGeneral = Product::with(['category', 'seller', 'studyProgram'])
-            ->where('status', 'verified')
-            ->withCount('orderItems')
-            ->having('order_items_count', '>', 0)
-            ->orderByDesc('order_items_count')
-            ->orderByDesc('created_at')
-            ->take(12)
-            ->get();
-        
-        // Trending Per Prodi - Berdasarkan filter
+        $selectedProdi = $request->get('prodi', 'all');
+        $studyPrograms = collect();
+        $trendingGeneral = collect();
         $trendingByProdi = collect();
-        if ($selectedProdi !== 'all') {
-            // Ambil produk dari prodi yang dipilih (cek prodi_id ATAU seller.prodi)
-            $trendingByProdi = Product::with(['category', 'seller', 'studyProgram'])
+        
+        try {
+            $studyPrograms = \App\Models\StudyProgram::orderBy('name')->get();
+            
+            $trendingGeneral = Product::with(['category', 'seller', 'studyProgram'])
                 ->where('status', 'verified')
-                ->where(function($q) use ($selectedProdi) {
-                    $q->where('prodi_id', $selectedProdi)
-                      ->orWhereHas('seller', function($sq) use ($selectedProdi) {
-                          $sq->where('prodi', $selectedProdi);
-                      });
-                })
-                ->withCount('orderItems')
-                ->orderByDesc('order_items_count')
-                ->orderByDesc('created_at')
-                ->take(20)
-                ->get();
-        } else {
-            // Jika "all", ambil semua prodi dengan produk trending (yang sudah terjual)
-            $trendingByProdi = Product::with(['category', 'seller', 'studyProgram'])
-                ->where('status', 'verified')
-                ->where(function($q) {
-                    $q->whereNotNull('prodi_id')
-                      ->orWhereHas('seller', function($sq) {
-                          $sq->whereNotNull('prodi');
-                      });
-                })
                 ->withCount('orderItems')
                 ->having('order_items_count', '>', 0)
                 ->orderByDesc('order_items_count')
                 ->orderByDesc('created_at')
-                ->get()
-                ->groupBy(function($product) {
-                    return $product->prodi_id ?? $product->seller->prodi ?? 0;
-                })
-                ->filter(function($products, $key) {
-                    return $key > 0;
-                })
-                ->map(function($products) {
-                    return $products->take(12);
-                });
+                ->take(12)
+                ->get();
+            
+            if ($selectedProdi !== 'all') {
+                $trendingByProdi = Product::with(['category', 'seller', 'studyProgram'])
+                    ->where('status', 'verified')
+                    ->where(function($q) use ($selectedProdi) {
+                        $q->where('prodi_id', $selectedProdi)
+                          ->orWhereHas('seller', function($sq) use ($selectedProdi) {
+                              $sq->where('prodi', $selectedProdi);
+                          });
+                    })
+                    ->withCount('orderItems')
+                    ->orderByDesc('order_items_count')
+                    ->orderByDesc('created_at')
+                    ->take(20)
+                    ->get();
+            } else {
+                $trendingByProdi = Product::with(['category', 'seller', 'studyProgram'])
+                    ->where('status', 'verified')
+                    ->where(function($q) {
+                        $q->whereNotNull('prodi_id')
+                          ->orWhereHas('seller', function($sq) {
+                              $sq->whereNotNull('prodi');
+                          });
+                    })
+                    ->withCount('orderItems')
+                    ->having('order_items_count', '>', 0)
+                    ->orderByDesc('order_items_count')
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->groupBy(function($product) {
+                        return $product->prodi_id ?? $product->seller->prodi ?? 0;
+                    })
+                    ->filter(function($products, $key) {
+                        return $key > 0;
+                    })
+                    ->map(function($products) {
+                        return $products->take(12);
+                    });
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('HomeController trending data fetch error: ' . $e->getMessage());
         }
         
         return view('trending', compact('trendingGeneral', 'trendingByProdi', 'user', 'studyPrograms', 'selectedProdi'));

@@ -697,6 +697,13 @@
             </div>
         @endif
 
+        @if(isset($dbError) && $dbError)
+            <div style="background: #fff8e1; border-left: 4px solid #f59e0b; padding: 14px 16px; margin-bottom: 20px; border-radius: 8px;">
+                <p style="color: #b45309; font-size: 14px; margin: 0; font-weight: 600;">⚠️ Informasi Koneksi Database</p>
+                <p style="color: #92400e; font-size: 13px; margin: 6px 0 0 0;">Website berjalan normal, namun koneksi database belum terhubung ({{ $dbError }}). Pastikan Environment Variables database (misal Supabase / PostgreSQL) telah ditambahkan di dashboard Vercel.</p>
+            </div>
+        @endif
+
         @if(Auth::check() && Auth::user()->role === 'validator' && !Auth::user()->verified)
             <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; margin-bottom: 20px; border-radius: 8px;">
                 <p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 600;">⏳ Akun Validator Menunggu Verifikasi</p>

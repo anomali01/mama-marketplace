@@ -15,7 +15,11 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::paginate(12);
+        try {
+            $products = Product::where('status', 'verified')->latest()->paginate(12);
+        } catch (\Throwable $e) {
+            $products = new \Illuminate\Pagination\LengthAwarePaginator(collect(), 0, 12);
+        }
         return view('products.index', compact('products'));
     }
 
@@ -94,7 +98,9 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load(['seller.studyProgram', 'category']);
+        try {
+            $product->load(['seller.studyProgram', 'category']);
+        } catch (\Throwable $e) {}
         return view('products.show', compact('product'));
     }
 
